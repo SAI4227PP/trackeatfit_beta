@@ -1,15 +1,21 @@
 {
   "expo": {
-    "name": "simple",
+    "name": "AyurNutra Care",
     "slug": "simple",
     "version": "1.0.0",
     "orientation": "portrait",
-    "icon": "./assets/images/icon.png",
+    "icon": "./assets/images/premium_icon.png",
     "scheme": "simple",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "infoPlist": {
+        "NSCameraUsageDescription": "This app uses the camera to scan barcodes and take food photos",
+        "NSMicrophoneUsageDescription": "This app uses the microphone for speech recognition",
+        "NSPhotoLibraryUsageDescription": "This app uses the photo library to upload food images",
+        "NSPhotoLibraryAddUsageDescription": "This app saves photos to your library"
+      }
     },
     "android": {
       "adaptiveIcon": {
@@ -19,18 +25,26 @@
         "monochromeImage": "./assets/images/android-icon-monochrome.png"
       },
       "edgeToEdgeEnabled": true,
-      "predictiveBackGestureEnabled": false
+      "predictiveBackGestureEnabled": false,
+      "package": "com.hip6379.simple",
+      "permissions": [
+        "CAMERA",
+        "READ_EXTERNAL_STORAGE",
+        "WRITE_EXTERNAL_STORAGE",
+        "RECORD_AUDIO",
+        "VIBRATE"
+      ]
     },
     "web": {
       "output": "static",
-      "favicon": "./assets/images/favicon.png"
+      "favicon": "./assets/images/premium_icon.png"
     },
     "plugins": [
       "expo-router",
       [
         "expo-splash-screen",
         {
-          "image": "./assets/images/splash-icon.png",
+          "image": "./assets/images/premium_icon.png",
           "imageWidth": 200,
           "resizeMode": "contain",
           "backgroundColor": "#ffffff",
@@ -38,11 +52,24 @@
             "backgroundColor": "#000000"
           }
         }
-      ]
+      ],
+      [
+        "expo-video",
+        {
+          "supportsBackgroundPlayback": true,
+          "supportsPictureInPicture": true
+        }
+      ],
+      "expo-audio",
+      "expo-image-picker",
+      "expo-media-library"
+      
     ],
-    "experiments": {
-      "typedRoutes": true,
-      "reactCompiler": true
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "9c40f71f-9983-4a18-94ec-68d7d0554faa"
+      }
     }
   }
 }
