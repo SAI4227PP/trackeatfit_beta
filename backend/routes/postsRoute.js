@@ -185,8 +185,8 @@ async function withRetry(operation, maxRetries = 3) {
 
 // Helper: Process CDN URLs
 function processCDNUrls(data) {
-  const CDN_URL = 'https://cdn.trackeatfit.xyz';
-  const processUrl = url => url?.replace('https://cdn.trackeatfit.xyz.s3.us-east-1.amazonaws.com', CDN_URL);
+  const CDN_URL = 'https://cdn.trackeatfit.me';
+  const processUrl = url => url?.replace('https://cdn.trackeatfit.me.s3.us-east-1.amazonaws.com', CDN_URL);
   
   if (Array.isArray(data)) {
     return data.map(item => ({
@@ -283,7 +283,7 @@ router.get('/all', async (req, res) => {
     }
 
     const skipAmount = (pageNumber - 1) * limitNumber;
-    const CDN_URL = 'https://cdn.trackeatfit.xyz';
+    const CDN_URL = 'https://cdn.trackeatfit.me';
 
     // Check Redis for saved posts first
     let userSavedPosts = [];
@@ -448,10 +448,10 @@ router.get('/all', async (req, res) => {
         return {
             ...post,
             images: post.images.map(img =>
-                img.replace('https://cdn.trackeatfit.xyz.s3.us-east-1.amazonaws.com', CDN_URL)
+                img.replace('https://cdn.trackeatfit.me.s3.us-east-1.amazonaws.com', CDN_URL)
             ),
             profilepic: post.profilepic && typeof post.profilepic === 'string'
-                ? post.profilepic.replace('https://cdn.trackeatfit.xyz.s3.us-east-1.amazonaws.com', CDN_URL)
+                ? post.profilepic.replace('https://cdn.trackeatfit.me.s3.us-east-1.amazonaws.com', CDN_URL)
                 : post.profilepic,
             isSaved
         };
@@ -727,14 +727,14 @@ router.get('/:postId', async (req, res) => {
     }
 
     // Process CDN URLs and enhance with real-time counts
-    const CDN_URL = 'https://cdn.trackeatfit.xyz';
+    const CDN_URL = 'https://cdn.trackeatfit.me';
     postObj = {
       ...postObj,
       images: postObj.images.map(img =>
-        img.replace('https://cdn.trackeatfit.xyz.s3.us-east-1.amazonaws.com', CDN_URL)
+        img.replace('https://cdn.trackeatfit.me.s3.us-east-1.amazonaws.com', CDN_URL)
       ),
       profilepic: postObj.profilepic && typeof postObj.profilepic === 'string'
-        ? postObj.profilepic.replace('https://cdn.trackeatfit.xyz.s3.us-east-1.amazonaws.com', CDN_URL)
+        ? postObj.profilepic.replace('https://cdn.trackeatfit.me.s3.us-east-1.amazonaws.com', CDN_URL)
         : postObj.profilepic,
       likesCount: totalLikes || postObj.likesCount,
       commentsCount: totalComments || postObj.commentsCount
@@ -808,7 +808,7 @@ router.get('/user/:userId', async (req, res) => {
 
     if (redisPosts && redisPosts.length > 0) {
       // Enhance posts with user-specific data, always recalculate isLiked/isSaved
-      const CDN_URL = 'https://cdn.trackeatfit.xyz';
+      const CDN_URL = 'https://cdn.trackeatfit.me';
       const processedPosts = await Promise.all(redisPosts.map(async post => {
         const postIdStr = post._id ? post._id.toString() : undefined;
         const postUserIdStr = post.userId ? post.userId.toString() : undefined;
@@ -851,10 +851,10 @@ router.get('/user/:userId', async (req, res) => {
         return {
           ...post,
           images: post.images.map(img =>
-            img.replace('https://cdn.trackeatfit.xyz.s3.us-east-1.amazonaws.com', CDN_URL)
+            img.replace('https://cdn.trackeatfit.me.s3.us-east-1.amazonaws.com', CDN_URL)
           ),
           profilepic: post.profilepic && typeof post.profilepic === 'string'
-            ? post.profilepic.replace('https://cdn.trackeatfit.xyz.s3.us-east-1.amazonaws.com', CDN_URL)
+            ? post.profilepic.replace('https://cdn.trackeatfit.me.s3.us-east-1.amazonaws.com', CDN_URL)
             : post.profilepic,
           isLiked,
           isSaved,
@@ -1024,7 +1024,7 @@ router.get('/user/:userId', async (req, res) => {
     const totalPosts = dbTotalPosts;
 
     // Process posts for CDN and update likes/saved/commentCount from Redis
-    const CDN_URL = 'https://cdn.trackeatfit.xyz';
+    const CDN_URL = 'https://cdn.trackeatfit.me';
     const processedPosts = await Promise.all(posts.map(async post => {
       // Defensive: ensure IDs are present and strings
       const postIdStr = post._id ? post._id.toString() : undefined;
@@ -1077,10 +1077,10 @@ router.get('/user/:userId', async (req, res) => {
       return {
         ...post,
         images: post.images.map(img =>
-          img.replace('https://cdn.trackeatfit.xyz.s3.us-east-1.amazonaws.com', CDN_URL)
+          img.replace('https://cdn.trackeatfit.me.s3.us-east-1.amazonaws.com', CDN_URL)
         ),
         profilepic: post.profilepic && typeof post.profilepic === 'string'
-          ? post.profilepic.replace('https://cdn.trackeatfit.xyz.s3.us-east-1.amazonaws.com', CDN_URL)
+          ? post.profilepic.replace('https://cdn.trackeatfit.me.s3.us-east-1.amazonaws.com', CDN_URL)
           : post.profilepic,
         isLiked,
         isSaved,
@@ -1462,14 +1462,14 @@ router.get('/user/name/:uniqueName', async (req, res) => {
     ]);
 
     // Process posts for CDN
-    const CDN_URL = 'https://cdn.trackeatfit.xyz';
+    const CDN_URL = 'https://cdn.trackeatfit.me';
     const processedPosts = posts.map(post => ({
       ...post,
       images: post.images.map(img =>
-        img.replace('https://cdn.trackeatfit.xyz.s3.us-east-1.amazonaws.com', CDN_URL)
+        img.replace('https://cdn.trackeatfit.me.s3.us-east-1.amazonaws.com', CDN_URL)
       ),
       profilepic: post.profilepic && typeof post.profilepic === 'string'
-        ? post.profilepic.replace('https://cdn.trackeatfit.xyz.s3.us-east-1.amazonaws.com', CDN_URL)
+        ? post.profilepic.replace('https://cdn.trackeatfit.me.s3.us-east-1.amazonaws.com', CDN_URL)
         : post.profilepic
     }));
 

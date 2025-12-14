@@ -816,9 +816,9 @@ router.get('/get-current-user', verifyToken, async (req, res) => {
     });
 
     // --- Replace S3 URLs with CDN ---
-    const CDN_URL = 'https://cdn.trackeatfit.xyz';
+    const CDN_URL = 'https://cdn.trackeatfit.me';
     const avatar = typeof userDoc.profile?.avatar === 'string'
-      ? userDoc.profile.avatar.replace('https://cdn.trackeatfit.xyz.s3.us-east-1.amazonaws.com', CDN_URL)
+      ? userDoc.profile.avatar.replace('https://cdn.trackeatfit.me.s3.us-east-1.amazonaws.com', CDN_URL)
       : null;
 
     // --- Only the most recent ACTIVE subscription ---

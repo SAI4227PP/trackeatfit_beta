@@ -223,12 +223,12 @@ router.get('/follow-data/:userId', async (req, res) => {
       .populate('following', 'profile.username profile.uniqueName profile.avatar');
     
     // CDN URL for avatar replacement
-    const CDN_URL = 'https://cdn.trackeatfit.xyz';
+    const CDN_URL = 'https://cdn.trackeatfit.me';
 
     // Helper to replace S3 URL with CDN
     const replaceAvatarUrl = (avatar) => {
       if (typeof avatar === 'string') {
-        return avatar.replace('https://cdn.trackeatfit.xyz.s3.us-east-1.amazonaws.com', CDN_URL);
+        return avatar.replace('https://cdn.trackeatfit.me.s3.us-east-1.amazonaws.com', CDN_URL);
       }
       return avatar;
     };
@@ -311,11 +311,11 @@ router.get('/notifications/:userId', async (req, res) => {
     .lean();
 
     // CDN URL for avatar replacement
-    const CDN_URL = 'https://cdn.trackeatfit.xyz';
+    const CDN_URL = 'https://cdn.trackeatfit.me';
     // Helper to replace S3 URL with CDN
     const replaceAvatarUrl = (avatar) => {
       if (typeof avatar === 'string') {
-        return avatar.replace('https://cdn.trackeatfit.xyz.s3.us-east-1.amazonaws.com', CDN_URL);
+        return avatar.replace('https://cdn.trackeatfit.me.s3.us-east-1.amazonaws.com', CDN_URL);
       }
       return avatar;
     };
