@@ -1,0 +1,88 @@
+export const hiTranslations = {
+  common: {
+    language: 'भाषा',
+    save: 'परिवर्तन सहेजें',
+    saving: 'सहेज रहा है...',
+    settings: 'भाषा सेटिंग्स',
+    back: 'वापस',
+  },
+  language: {
+    infoTitle: 'भाषा सेटिंग्स',
+    infoText: 'अपनी पसंदीदा भाषा चुनें। यह ऐप के इंटरफ़ेस और सामग्री की भाषा को बदल देगा।',
+    suggestedLanguages: 'सुझाई गई भाषाएँ',
+    allLanguages: 'सभी भाषाएँ',
+    updateSuccess: 'भाषा अपडेट की गई',
+    updateMessage: 'भाषा परिवर्तनों को लागू करने के लिए ऐप पुनः आरंभ होगा।',
+    error: 'भाषा सेटिंग्स अपडेट करने में विफल'
+  },
+  profile: {
+    title: 'प्रोफ़ाइल',
+    memberSince: 'सदस्यता से',
+    level: 'स्तर',
+    premium: 'प्रीमियम सदस्य',
+    nutritionOverview: 'पोषण अवलोकन',
+    dailyCalories: 'दैनिक कैलोरी',
+    waterIntake: 'पानी का सेवन',
+    activeDays: 'सक्रिय दिन',
+    protein: 'प्रोटीन',
+    achievements: 'उपलब्धियां',
+    seeAll: 'सभी देखें',
+    noAchievements: 'अभी तक कोई उपलब्धि अनलॉक नहीं हुई',
+    guest: 'अतिथि उपयोगकर्ता',
+    camera: 'फ़ोटो बदलें',
+    status: {
+      novice: 'पोषण नौसिखिया',
+      explorer: 'स्वास्थ्य खोजी',
+      seeker: 'कल्याण साधक',
+      enthusiast: 'फिटनेस उत्साही',
+      champion: 'स्वास्थ्य चैंपियन',
+      pro: 'पोषण विशेषज्ञ',
+      warrior: 'कल्याण योद्धा',
+      expert: 'स्वास्थ्य विशेषज्ञ',
+      elite: 'एलीट साधक',
+      master: 'कल्याण मास्टर'
+    },
+    stats: {
+      dailyCalories: 'दैनिक कैलोरी',
+      waterIntake: 'पानी का सेवन',
+      activeDays: 'सक्रिय दिन',
+      protein: 'प्रोटीन',
+      kcal: 'कैलोरी',
+      L: 'ली',
+      week: '/सप्ताह',
+      g: 'ग्रा'
+    },
+    sections: {
+      healthGoals: 'स्वास्थ्य लक्ष्य',
+      accountSettings: 'खाता सेटिंग्स',
+      trackingAnalysis: 'ट्रैकिंग और विश्लेषण',
+      preferences: 'प्राथमिकताएं'
+    },
+    options: {
+      userDetails: 'उपयोगकर्ता विवरण अपडेट करें',
+      weightGoal: 'वजन लक्ष्य अपडेट करें',
+      mealSchedule: 'भोजन कार्यक्रम',
+      email: 'ईमेल बदलें',
+      password: 'पासवर्ड बदलें',
+      phone: 'फोन नंबर जोड़ें',
+      reports: 'प्रगति रिपोर्ट',
+      apps: 'कनेक्टेड ऐप्स',
+      devices: 'कनेक्टेड डिवाइस',
+      export: 'डेटा निर्यात करें',
+      notifications: 'सूचनाएं',
+      language: 'भाषा',
+      darkMode: 'डार्क मोड',
+      changeEmail: 'ईमेल बदलें',
+      changePassword: 'पासवर्ड बदलें',
+      addPhoneNumber: 'फ़ोन नंबर जोड़ें',
+      progressReports: 'प्रगति रिपोर्ट',
+      connectedApps: 'कनेक्टेड ऐप्स',
+      connectedDevices: 'कनेक्टेड डिवाइस',
+      exportData: 'डेटा निर्यात करें',
+      notifications: 'सूचनाएं',
+      signOut: 'साइन आउट'
+    },
+    signOut: 'साइन आउट',
+    signingOut: 'साइन आउट हो रहा है...'
+  }
+};
