@@ -30,10 +30,10 @@ router.use((req, res, next) => {
 router.get('/', async (req, res) => {
     try {
         const types = await ExerciseType.find({});
-        const CDN_URL = 'https://cdn.trackeatfit.xyz';
+        const CDN_URL = 'https://cdn.trackeatfit.me';
         const updatedTypes = types.map(type => ({
             ...type.toObject(),
-            image: type.image.replace('https://cdn.trackeatfit.xyz.s3.us-east-1.amazonaws.com', CDN_URL)
+            image: type.image.replace('https://cdn.trackeatfit.me.s3.us-east-1.amazonaws.com', CDN_URL)
         }));
         res.set('Cache-Control', 'public, max-age=86400, stale-while-revalidate=60');
         res.json(updatedTypes);

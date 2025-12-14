@@ -192,10 +192,10 @@ router.get('/user/:uniqueName', async (req, res) => {
     ]);
 
     // Replace S3 URLs with CDN for avatar
-    const CDN_URL = 'https://cdn.trackeatfit.xyz';
+    const CDN_URL = 'https://cdn.trackeatfit.me';
     let avatar = user.profile.avatar;
     if (avatar && typeof avatar === 'string') {
-      avatar = avatar.replace('https://cdn.trackeatfit.xyz.s3.us-east-1.amazonaws.com', CDN_URL);
+      avatar = avatar.replace('https://cdn.trackeatfit.me.s3.us-east-1.amazonaws.com', CDN_URL);
     }
 
     // Format user data

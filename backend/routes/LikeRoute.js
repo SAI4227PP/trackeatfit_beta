@@ -74,18 +74,18 @@ router.post('/like', async (req, res) => {
     if (existingLike) {
       const likesCount = await RedisPostService.getPostLikesCount(postId) || await Like.countDocuments({ postId });
       // Replace S3 URLs with CDN in images and profilepic
-      const CDN_URL = 'https://cdn.trackeatfit.xyz';
+      const CDN_URL = 'https://cdn.trackeatfit.me';
       const postWithCdn = {
         ...post,
         likesCount,
         isLiked: true,
         images: Array.isArray(post.images)
           ? post.images.map(img =>
-              img.replace('https://cdn.trackeatfit.xyz.s3.us-east-1.amazonaws.com', CDN_URL)
+              img.replace('https://cdn.trackeatfit.me.s3.us-east-1.amazonaws.com', CDN_URL)
             )
           : post.images,
         profilepic: post.profilepic && typeof post.profilepic === 'string'
-          ? post.profilepic.replace('https://cdn.trackeatfit.xyz.s3.us-east-1.amazonaws.com', CDN_URL)
+          ? post.profilepic.replace('https://cdn.trackeatfit.me.s3.us-east-1.amazonaws.com', CDN_URL)
           : post.profilepic
       };
       notifyAllClients('posts', {
@@ -121,18 +121,18 @@ router.post('/like', async (req, res) => {
     
 
     // Replace S3 URLs with CDN in images and profilepic
-    const CDN_URL = 'https://cdn.trackeatfit.xyz';
+    const CDN_URL = 'https://cdn.trackeatfit.me';
     const postWithCdn = {
       ...post,
       likesCount,
       isLiked: true,
       images: Array.isArray(post.images)
         ? post.images.map(img =>
-            img.replace('https://cdn.trackeatfit.xyz.s3.us-east-1.amazonaws.com', CDN_URL)
+            img.replace('https://cdn.trackeatfit.me.s3.us-east-1.amazonaws.com', CDN_URL)
           )
         : post.images,
       profilepic: post.profilepic && typeof post.profilepic === 'string'
-        ? post.profilepic.replace('https://cdn.trackeatfit.xyz.s3.us-east-1.amazonaws.com', CDN_URL)
+        ? post.profilepic.replace('https://cdn.trackeatfit.me.s3.us-east-1.amazonaws.com', CDN_URL)
         : post.profilepic
     };
     notifyAllClients('posts', {
@@ -356,16 +356,16 @@ router.get('/likes-by-user/:userId', async (req, res) => {
     ]);
 
     // Replace S3 URLs with CDN for both images and profilepic in each post
-    const CDN_URL = 'https://cdn.trackeatfit.xyz';
+    const CDN_URL = 'https://cdn.trackeatfit.me';
     const postsWithCdn = posts.map(post => ({
       ...post,
       images: Array.isArray(post.images)
         ? post.images.map(img =>
-            img.replace('https://cdn.trackeatfit.xyz.s3.us-east-1.amazonaws.com', CDN_URL)
+            img.replace('https://cdn.trackeatfit.me.s3.us-east-1.amazonaws.com', CDN_URL)
           )
         : post.images,
       profilepic: post.profilepic && typeof post.profilepic === 'string'
-        ? post.profilepic.replace('https://cdn.trackeatfit.xyz.s3.us-east-1.amazonaws.com', CDN_URL)
+        ? post.profilepic.replace('https://cdn.trackeatfit.me.s3.us-east-1.amazonaws.com', CDN_URL)
         : post.profilepic
     }));
 
@@ -425,18 +425,18 @@ router.delete('/unlike', async (req, res) => {
     if (!like) {
       const likesCount = await Like.countDocuments({ postId });
       // Replace S3 URLs with CDN in images and profilepic
-      const CDN_URL = 'https://cdn.trackeatfit.xyz';
+      const CDN_URL = 'https://cdn.trackeatfit.me';
       const postWithCdn = {
         ...post,
         likesCount,
         isLiked: false,
         images: Array.isArray(post.images)
           ? post.images.map(img =>
-              img.replace('https://cdn.trackeatfit.xyz.s3.us-east-1.amazonaws.com', CDN_URL)
+              img.replace('https://cdn.trackeatfit.me.s3.us-east-1.amazonaws.com', CDN_URL)
             )
           : post.images,
         profilepic: post.profilepic && typeof post.profilepic === 'string'
-          ? post.profilepic.replace('https://cdn.trackeatfit.xyz.s3.us-east-1.amazonaws.com', CDN_URL)
+          ? post.profilepic.replace('https://cdn.trackeatfit.me.s3.us-east-1.amazonaws.com', CDN_URL)
           : post.profilepic
       };
       notifyAllClients('posts', {
@@ -466,18 +466,18 @@ router.delete('/unlike', async (req, res) => {
 
 
     // Replace S3 URLs with CDN in images and profilepic
-    const CDN_URL = 'https://cdn.trackeatfit.xyz';
+    const CDN_URL = 'https://cdn.trackeatfit.me';
     const postWithCdn = {
       ...post,
       likesCount,
       isLiked: false,
       images: Array.isArray(post.images)
         ? post.images.map(img =>
-            img.replace('https://cdn.trackeatfit.xyz.s3.us-east-1.amazonaws.com', CDN_URL)
+            img.replace('https://cdn.trackeatfit.me.s3.us-east-1.amazonaws.com', CDN_URL)
           )
         : post.images,
       profilepic: post.profilepic && typeof post.profilepic === 'string'
-        ? post.profilepic.replace('https://cdn.trackeatfit.xyz.s3.us-east-1.amazonaws.com', CDN_URL)
+        ? post.profilepic.replace('https://cdn.trackeatfit.me.s3.us-east-1.amazonaws.com', CDN_URL)
         : post.profilepic
     };
     notifyAllClients('posts', {

@@ -30,10 +30,10 @@ router.use((req, res, next) => {
 router.get('/', async (req, res) => {
     try {
         const bodyParts = await BodyPart.find({});
-        const CDN_URL = 'https://cdn.trackeatfit.xyz';
+        const CDN_URL = 'https://cdn.trackeatfit.me';
         const updatedBodyParts = bodyParts.map(bp => ({
             ...bp.toObject(),
-            image: bp.image.replace('https://cdn.trackeatfit.xyz.s3.us-east-1.amazonaws.com', CDN_URL)
+            image: bp.image.replace('https://cdn.trackeatfit.me.s3.us-east-1.amazonaws.com', CDN_URL)
         }));
         res.set('Cache-Control', 'public, max-age=86400, stale-while-revalidate=60');
         res.json(updatedBodyParts);

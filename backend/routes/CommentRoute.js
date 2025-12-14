@@ -11,8 +11,8 @@ const router = express.Router();
 const mongoose = require('mongoose');
 
 // Constants
-const CDN_URL = 'https://cdn.trackeatfit.xyz';
-const S3_URL = 'https://cdn.trackeatfit.xyz.s3.us-east-1.amazonaws.com';
+const CDN_URL = 'https://cdn.trackeatfit.me';
+const S3_URL = 'https://cdn.trackeatfit.me.s3.us-east-1.amazonaws.com';
 
 // Create a comment
 router.post('/create', async (req, res) => {
@@ -508,7 +508,7 @@ router.get('/comments-by-user/:userId', async (req, res) => {
         comments: (item.comments || []).map(comment => ({
           ...comment,
           profilepic: comment.profilepic && typeof comment.profilepic === 'string'
-            ? comment.profilepic.replace('https://cdn.trackeatfit.xyz.s3.us-east-1.amazonaws.com', CDN_URL)
+            ? comment.profilepic.replace('https://cdn.trackeatfit.me.s3.us-east-1.amazonaws.com', CDN_URL)
             : comment.profilepic
         }))
       })),

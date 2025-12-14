@@ -54,11 +54,11 @@ router.get('/', async (req, res) => {
       V3_exercise.find({}, projection).skip(skip).limit(limit).lean(),
       V3_exercise.countDocuments()
     ]);
-    const CDN_URL = 'https://cdn.trackeatfit.xyz';
+    const CDN_URL = 'https://cdn.trackeatfit.me';
     const updatedExercises = exercises.map(obj => ({
       ...obj,
       mainImage: obj.mainImage
-        ? obj.mainImage.replace('https://cdn.trackeatfit.xyz.s3.us-east-1.amazonaws.com', CDN_URL)
+        ? obj.mainImage.replace('https://cdn.trackeatfit.me.s3.us-east-1.amazonaws.com', CDN_URL)
         : obj.mainImage
     }));
     const response = {
@@ -99,11 +99,11 @@ router.get('/bodypart/:bodyPart', async (req, res) => {
       V3_exercise.find({ bodyPart }, projection).skip(skip).limit(limit).lean(),
       V3_exercise.countDocuments({ bodyPart })
     ]);
-    const CDN_URL = 'https://cdn.trackeatfit.xyz';
+    const CDN_URL = 'https://cdn.trackeatfit.me';
     const updatedExercises = exercises.map(obj => ({
       ...obj,
       mainImage: obj.mainImage
-        ? obj.mainImage.replace('https://cdn.trackeatfit.xyz.s3.us-east-1.amazonaws.com', CDN_URL)
+        ? obj.mainImage.replace('https://cdn.trackeatfit.me.s3.us-east-1.amazonaws.com', CDN_URL)
         : obj.mainImage
     }));
     const response = {
@@ -144,11 +144,11 @@ router.get('/equipment/:equipment', async (req, res) => {
       V3_exercise.find({ equipment }, projection).skip(skip).limit(limit).lean(),
       V3_exercise.countDocuments({ equipment })
     ]);
-    const CDN_URL = 'https://cdn.trackeatfit.xyz';
+    const CDN_URL = 'https://cdn.trackeatfit.me';
     const updatedExercises = exercises.map(obj => ({
       ...obj,
       mainImage: obj.mainImage
-        ? obj.mainImage.replace('https://cdn.trackeatfit.xyz.s3.us-east-1.amazonaws.com', CDN_URL)
+        ? obj.mainImage.replace('https://cdn.trackeatfit.me.s3.us-east-1.amazonaws.com', CDN_URL)
         : obj.mainImage
     }));
     const response = {
@@ -191,11 +191,11 @@ router.get('/exercisetype/:exerciseType', async (req, res) => {
       V3_exercise.find({ category: exerciseType }, projection).skip(skip).limit(limit).lean(),
       V3_exercise.countDocuments({ category: exerciseType })
     ]);
-    const CDN_URL = 'https://cdn.trackeatfit.xyz';
+    const CDN_URL = 'https://cdn.trackeatfit.me';
     const updatedExercises = exercises.map(obj => ({
       ...obj,
       mainImage: obj.mainImage
-        ? obj.mainImage.replace('https://cdn.trackeatfit.xyz.s3.us-east-1.amazonaws.com', CDN_URL)
+        ? obj.mainImage.replace('https://cdn.trackeatfit.me.s3.us-east-1.amazonaws.com', CDN_URL)
         : obj.mainImage
     }));
     const response = {
@@ -237,11 +237,11 @@ router.get('/difficulty/:difficulty', async (req, res) => {
       V3_exercise.find({ idealFor: difficulty }, projection).skip(skip).limit(limit).lean(),
       V3_exercise.countDocuments({ idealFor: difficulty })
     ]);
-    const CDN_URL = 'https://cdn.trackeatfit.xyz';
+    const CDN_URL = 'https://cdn.trackeatfit.me';
     const updatedExercises = exercises.map(obj => ({
       ...obj,
       mainImage: obj.mainImage
-        ? obj.mainImage.replace('https://cdn.trackeatfit.xyz.s3.us-east-1.amazonaws.com', CDN_URL)
+        ? obj.mainImage.replace('https://cdn.trackeatfit.me.s3.us-east-1.amazonaws.com', CDN_URL)
         : obj.mainImage
     }));
     const response = {
@@ -288,11 +288,11 @@ router.get('/search', async (req, res) => {
       V3_exercise.find(searchQuery, projection).skip(skip).limit(parseInt(limit)).lean(),
       V3_exercise.countDocuments(searchQuery)
     ]);
-    const CDN_URL = 'https://cdn.trackeatfit.xyz';
+    const CDN_URL = 'https://cdn.trackeatfit.me';
     const updatedExercises = exercises.map(obj => ({
       ...obj,
       mainImage: obj.mainImage
-        ? obj.mainImage.replace('https://cdn.trackeatfit.xyz.s3.us-east-1.amazonaws.com', CDN_URL)
+        ? obj.mainImage.replace('https://cdn.trackeatfit.me.s3.us-east-1.amazonaws.com', CDN_URL)
         : obj.mainImage
     }));
     const response = {
@@ -320,11 +320,11 @@ router.get('/:id', async (req, res) => {
     if (!ex) {
       return res.status(404).json({ message: 'Exercise not found' });
     }
-    const CDN_URL = 'https://cdn.trackeatfit.xyz';
+    const CDN_URL = 'https://cdn.trackeatfit.me';
     const updatedExercise = {
       ...ex.toObject(),
       mainImage: ex.mainImage
-        ? ex.mainImage.replace('https://cdn.trackeatfit.xyz.s3.us-east-1.amazonaws.com', CDN_URL)
+        ? ex.mainImage.replace('https://cdn.trackeatfit.me.s3.us-east-1.amazonaws.com', CDN_URL)
         : ex.mainImage
     };
 

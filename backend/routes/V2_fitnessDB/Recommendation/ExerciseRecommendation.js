@@ -59,14 +59,14 @@ async function getBeginnerRecommendations(v2Conn) {
     .lean();
   }
 
-  const CDN_URL = 'https://cdn.trackeatfit.xyz';
+  const CDN_URL = 'https://cdn.trackeatfit.me';
   
   // Group exercises by muscle groups for consistency
   const groupedExercises = beginnerExercises.reduce((acc, exercise) => {
     // Update mainImage URL
     if (exercise.mainImage) {
       exercise.mainImage = exercise.mainImage.replace(
-        'https://cdn.trackeatfit.xyz.s3.us-east-1.amazonaws.com',
+        'https://cdn.trackeatfit.me.s3.us-east-1.amazonaws.com',
         CDN_URL
       );
     }
@@ -440,7 +440,7 @@ router.get('/exercise-recommendations/:userId', async (req, res) => {
     }
 
     // Group exercises efficiently and collect stats
-    const CDN_URL = 'https://cdn.trackeatfit.xyz';
+    const CDN_URL = 'https://cdn.trackeatfit.me';
     const allEquipment = new Set();
     const muscleGroups = new Set();
     
@@ -456,7 +456,7 @@ router.get('/exercise-recommendations/:userId', async (req, res) => {
       // Update mainImage URL
       if (exercise.mainImage) {
         exercise.mainImage = exercise.mainImage.replace(
-          'https://cdn.trackeatfit.xyz.s3.us-east-1.amazonaws.com',
+          'https://cdn.trackeatfit.me.s3.us-east-1.amazonaws.com',
           CDN_URL
         );
       }

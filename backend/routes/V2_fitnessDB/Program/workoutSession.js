@@ -38,7 +38,7 @@ router.get('/individual/user/:userId', async (req, res) => {
   try {
     const { userId } = req.params;
     const sessions = await IndividualWorkoutSession.find({ userId }).sort({ sessionDate: -1 });
-    const CDN_URL = 'https://cdn.trackeatfit.xyz';
+    const CDN_URL = 'https://cdn.trackeatfit.me';
 
     // Collect all unique exerciseIds from all sessions
     const exerciseIds = [
@@ -58,7 +58,7 @@ router.get('/individual/user/:userId', async (req, res) => {
       ).lean();
       v3Exercises.forEach(ex => {
         exerciseImgs[ex._id.toString()] = ex.mainImage
-          ? ex.mainImage.replace('https://cdn.trackeatfit.xyz.s3.us-east-1.amazonaws.com', CDN_URL)
+          ? ex.mainImage.replace('https://cdn.trackeatfit.me.s3.us-east-1.amazonaws.com', CDN_URL)
           : null;
       });
     }

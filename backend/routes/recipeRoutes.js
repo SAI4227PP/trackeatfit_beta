@@ -23,7 +23,7 @@ router.use(async (req, res, next) => {
 });
 
 // CDN URL for images
-const CDN_URL = 'https://cdn.trackeatfit.xyz';
+const CDN_URL = 'https://cdn.trackeatfit.me';
 
 // Search recipes with minimal information and pagination
 router.get('/search', async (req, res) => {
@@ -74,7 +74,7 @@ router.get('/search', async (req, res) => {
             recipe_id: recipe.recipe_id,
             recipe_name: recipe.recipe_name,
             image: recipe.image
-                ? recipe.image.replace('https://cdn.trackeatfit.xyz.s3.us-east-1.amazonaws.com', CDN_URL)
+                ? recipe.image.replace('https://cdn.trackeatfit.me.s3.us-east-1.amazonaws.com', CDN_URL)
                 : '',
             calories_per_serving: Number(recipe.calories_per_serving?.toFixed(2)) || 0,
             cuisineType: recipe.recipe?.cuisineType || ['Various'],
@@ -159,9 +159,9 @@ router.get('/', async (req, res) => {
             recipe_id: recipe.recipe_id,
             recipe_name: recipe.recipe_name,
             image: recipe.image
-                ? recipe.image.replace('https://cdn.trackeatfit.xyz.s3.us-east-1.amazonaws.com', CDN_URL)
+                ? recipe.image.replace('https://cdn.trackeatfit.me.s3.us-east-1.amazonaws.com', CDN_URL)
                 : (recipe.recipe?.img_url
-                    ? recipe.recipe.img_url.replace('https://cdn.trackeatfit.xyz.s3.us-east-1.amazonaws.com', CDN_URL)
+                    ? recipe.recipe.img_url.replace('https://cdn.trackeatfit.me.s3.us-east-1.amazonaws.com', CDN_URL)
                     : ''),
             calories_per_serving: Number(recipe.calories_per_serving.toFixed(2)),
             totalTime: recipe.totalTime || 30,
@@ -230,7 +230,7 @@ router.get('/:id', async (req, res) => {
             recipe_id: recipe.recipe_id,
             recipe_name: recipe.recipe_name,
             image: recipe.image
-                ? recipe.image.replace('https://cdn.trackeatfit.xyz.s3.us-east-1.amazonaws.com', CDN_URL)
+                ? recipe.image.replace('https://cdn.trackeatfit.me.s3.us-east-1.amazonaws.com', CDN_URL)
                 : '',
             calories_per_serving: Number(recipe.calories_per_serving.toFixed(2)),
             totalTime: recipe.totalTime,
@@ -239,7 +239,7 @@ router.get('/:id', async (req, res) => {
             images: Array.isArray(recipe.images)
                 ? recipe.images.map(img =>
                     typeof img === 'string'
-                        ? img.replace('https://cdn.trackeatfit.xyz.s3.us-east-1.amazonaws.com', CDN_URL)
+                        ? img.replace('https://cdn.trackeatfit.me.s3.us-east-1.amazonaws.com', CDN_URL)
                         : img
                   )
                 : recipe.images,
