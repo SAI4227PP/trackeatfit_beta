@@ -295,24 +295,58 @@ const Profile = () => {
 
   const LoadingOverlay = () => (
     <Modal transparent visible={showLogoutAnimation}>
-      <View className="flex-1 justify-center items-center bg-black/30">
+      <View
+        style={{
+          flex: 1,
+          justifyContent: 'center',
+          alignItems: 'center',
+          backgroundColor: 'rgba(0,0,0,0.3)',
+        }}
+      >
         <LinearGradient
           colors={['rgba(255,255,255,0.95)', 'rgba(255,255,255,0.98)']}
-          className="p-6 rounded-2xl items-center shadow-lg w-4/5 max-w-sm"
+          style={{
+            padding: 24,
+            borderRadius: 16,
+            alignItems: 'center',
+            shadowColor: '#000',
+            shadowOffset: { width: 0, height: 4 },
+            shadowOpacity: 0.15,
+            shadowRadius: 8,
+            width: '80%',
+            maxWidth: 400,
+          }}
         >
           <ActivityIndicator size="large" color="#15803d" />
-          <Text className="mt-4 text-lg font-semibold text-gray-900">Signing Out</Text>
-          <Text className="mt-2 text-sm text-gray-500 text-center">
+          <Text
+            style={{
+              marginTop: 16,
+              fontSize: 18,
+              fontWeight: '600',
+              color: '#111827',
+            }}
+          >
+            Signing Out
+          </Text>
+          <Text
+            style={{
+              marginTop: 8,
+              fontSize: 14,
+              color: '#6b7280',
+              textAlign: 'center',
+            }}
+          >
             {clearingMessage}
           </Text>
-          <Progress.Bar
-            progress={clearingProgress}
-            width={200}
-            color="#15803d"
-            unfilledColor="#e5e7eb"
-            borderWidth={0}
-            className="mt-4"
-          />
+          <View style={{ marginTop: 16 }}>
+            <Progress.Bar
+              progress={clearingProgress}
+              width={200}
+              color="#15803d"
+              unfilledColor="#e5e7eb"
+              borderWidth={0}
+            />
+          </View>
         </LinearGradient>
       </View>
     </Modal>

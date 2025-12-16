@@ -77,7 +77,7 @@ const Favorite = () => {
       </Text>
       <TouchableOpacity 
         style={styles.exploreButton}
-        onPress={() => navigation.navigate('(tabs)')}
+        onPress={() => navigation.navigate('(tabs)/recipe')}
       >
         <Text style={styles.exploreButtonText}>Explore Recipes</Text>
       </TouchableOpacity>

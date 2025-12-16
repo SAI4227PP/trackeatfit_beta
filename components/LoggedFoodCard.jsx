@@ -1,13 +1,13 @@
 import { addDays, format, isValid, subDays } from 'date-fns'; // Importing date-fns for date manipulation
 import { LinearGradient } from 'expo-linear-gradient';
 import { useNavigation } from 'expo-router';
-import { memo, useCallback, useEffect, useState } from 'react';
+import { memo, useCallback, useEffect, useRef, useState } from 'react';
 import { Modal, ScrollView, Text, TouchableOpacity, TouchableWithoutFeedback, View } from 'react-native';
-import EventSource from 'react-native-event-source'; // Import EventSource from react-native-event-source
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import { useCaloriesContext } from '../context/CaloriesContext';
 import { useGlobalContext } from '../context/GlobalProvider'; // Global context for getting user data
 import { useTheme } from '../context/ThemeContext';
+import { CommunitySSEClient } from '../utils/sseClient';
 import ShimmerEffect from './ui/ShimmerEffect';
 
 const API_URL = "https://trackeatfit.onrender.com"; // Add this line
@@ -566,6 +566,7 @@ const LoggedFoodCard = ({ setTotalCalories, userCalories, totalCalories }) => {
   const { isDarkMode } = useTheme();
   const [water, setWater] = useState([]);
   const [notes, setNotes] = useState([]);
+  const sseClientRef = useRef(null);
 
   const userId = user?.$id || user?._id;
 
@@ -870,127 +871,103 @@ const LoggedFoodCard = ({ setTotalCalories, userCalories, totalCalories }) => {
   // Format today's date for display
   const formattedDate = format(selectedDate, 'MMM dd, yyyy');
 
+  // --- SSE/WebSocket integration ---
   useEffect(() => {
-    let eventSource;
-    let retryCount = 0;
-    const maxRetries = 5;
-    const retryDelay = 3000;
+    if (!userId) return;
 
-    const connectSSE = () => {
-      try {
-        eventSource = new EventSource(`${API_URL}/logged-food/events`);
-
-        eventSource.onopen = () => {
-          console.log('SSE Connection opened');
-          retryCount = 0;
-        };
-
-        eventSource.addEventListener('connected', (event) => {
-          console.log('SSE Connected with ID:', event.data);
-        });
-
-        // Handle all types of updates through a single logged-food event
-        eventSource.addEventListener('logged-food', (event) => {
-          try {
-            const data = JSON.parse(event.data);
-            console.log('Logged food event received:', data);
-
-            if (data.userId === userId) {
-              switch (data.type) {
-                case 'delete':
-                  // Update filteredFood by removing the deleted item
-                  setFilteredFood(prevFood => 
-                    prevFood.filter(item => {
-                      if (data.foodId) {
-                        return item.foodId !== data.foodId || item.mealType !== data.mealType;
-                      }
-                      if (data.recipeId) {
-                        return item.recipeId !== data.recipeId || item.mealType !== data.mealType;
-                      }
-                      return true;
-                    })
-                  );
-                  
-                  // Update loggedFood as well to maintain consistency
-                  setLoggedFood(prevFood => 
-                    prevFood.filter(item => {
-                      if (data.foodId) {
-                        return item.foodId !== data.foodId || item.mealType !== data.mealType;
-                      }
-                      if (data.recipeId) {
-                        return item.recipeId !== data.recipeId || item.mealType !== data.mealType;
-                      }
-                      return true;
-                    })
-                  );
-                  break;
-                case 'water-added':
-                  const newWaterEntry = {
-                    _id: Date.now().toString(),
-                    amount: data.amount,
-                    addedAt: new Date().toISOString()
-                  };
-                  setWater(prevWater => [...prevWater, newWaterEntry]);
-                  break;
-                case 'note-added':
-                  const newNoteEntry = {
-                    _id: Date.now().toString(),
-                    content: data.content,
-                    addedAt: new Date().toISOString()
-                  };
-                  setNotes(prevNotes => [...prevNotes, newNoteEntry]);
-                  break;
-                case 'water-deleted':
-                  if (data.waterId) {
-                    setWater(prevWater => prevWater.filter(w => w._id !== data.waterId));
-                  }
-                  break;
-                case 'note-deleted':
-                  if (data.noteId) {
-                    setNotes(prevNotes => prevNotes.filter(n => n._id !== data.noteId));
-                  }
-                  break;
-                case 'add':
-                case 'update':
-                  fetchLoggedFoodForDate(selectedDate);
-                  break;
-                default:
-                  console.log('Unknown event type:', data.type);
-              }
-            }
-          } catch (error) {
-            console.error('Error handling SSE event:', error);
-          }
-        });
-
-        eventSource.onerror = (error) => {
-          console.error('SSE Error:', error);
-          eventSource.close();
-
-          if (retryCount < maxRetries) {
-            retryCount++;
-            console.log(`Retrying connection (${retryCount}/${maxRetries}) in ${retryDelay}ms...`);
-            setTimeout(connectSSE, retryDelay);
-          } else {
-            console.error('Max retries reached, giving up SSE connection');
-          }
-        };
-      } catch (error) {
-        console.error('Error creating EventSource:', error);
-      }
-    };
-
-    if (userId) {
-      connectSSE();
+    // Clean up previous instance if any
+    if (sseClientRef.current) {
+      sseClientRef.current.close();
+      sseClientRef.current = null;
     }
 
-    return () => {
-      if (eventSource) {
-        console.log('Closing SSE connection');
-        eventSource.close();
+    // Handler for logged-food events
+    const handleLoggedFood = (msg) => {
+      const data = msg.data || msg;
+      if (data.userId !== userId) return;
+
+      switch (data.type) {
+        case 'delete':
+          setFilteredFood(prevFood =>
+            prevFood.filter(item => {
+              if (data.foodId) {
+                return item.foodId !== data.foodId || item.mealType !== data.mealType;
+              }
+              if (data.recipeId) {
+                return item.recipeId !== data.recipeId || item.mealType !== data.mealType;
+              }
+              return true;
+            })
+          );
+          setLoggedFood(prevFood =>
+            prevFood.filter(item => {
+              if (data.foodId) {
+                return item.foodId !== data.foodId || item.mealType !== data.mealType;
+              }
+              if (data.recipeId) {
+                return item.recipeId !== data.recipeId || item.mealType !== data.mealType;
+              }
+              return true;
+            })
+          );
+          break;
+        case 'water-added':
+          setWater(prevWater => [
+            ...prevWater,
+            {
+              _id: Date.now().toString(),
+              amount: data.amount,
+              addedAt: new Date().toISOString()
+            }
+          ]);
+          break;
+        case 'note-added':
+          setNotes(prevNotes => [
+            ...prevNotes,
+            {
+              _id: Date.now().toString(),
+              content: data.content,
+              addedAt: new Date().toISOString()
+            }
+          ]);
+          break;
+        case 'water-deleted':
+          if (data.waterId) {
+            setWater(prevWater => prevWater.filter(w => w._id !== data.waterId));
+          }
+          break;
+        case 'note-deleted':
+          if (data.noteId) {
+            setNotes(prevNotes => prevNotes.filter(n => n._id !== data.noteId));
+          }
+          break;
+        case 'add':
+        case 'update':
+          fetchLoggedFoodForDate(selectedDate);
+          break;
+        default:
+          console.log('Unknown event type:', data.type);
       }
     };
-  }, [userId, fetchLoggedFoodForDate, selectedDate]);
+
+    // Create or get singleton CommunitySSEClient
+    sseClientRef.current = CommunitySSEClient.getInstance({
+      url: '', // Not used, ws url is hardcoded in client
+      userId,
+      clientType: 'logged-food',
+      debugLabel: 'LoggedFoodCard',
+    });
+    // Attach handler
+    sseClientRef.current._onLoggedFood = handleLoggedFood;
+    sseClientRef.current.connect();
+
+    return () => {
+      if (sseClientRef.current) {
+        sseClientRef.current.close();
+        sseClientRef.current = null;
+      }
+    };
+  }, [userId, selectedDate, fetchLoggedFoodForDate]);
 
   const modalOptions = [
     {
