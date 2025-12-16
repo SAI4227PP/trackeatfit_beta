@@ -50,10 +50,10 @@ router.get('/progress/:userId/:programId', async (req, res) => {
     const progressData = progress.toObject();
 
     // CDN URL replacement for thumbnail
-    const CDN_URL = 'https://cdn.trackeatfit.xyz';
+    const CDN_URL = 'https://cdn.trackeatfit.me';
     const replaceCdn = url =>
       url && typeof url === 'string'
-        ? url.replace('https://cdn.trackeatfit.xyz.s3.us-east-1.amazonaws.com', CDN_URL)
+        ? url.replace('https://cdn.trackeatfit.me.s3.us-east-1.amazonaws.com', CDN_URL)
         : url;
 
     if (program && program.thumbnail) {
@@ -96,10 +96,10 @@ router.get('/progress/:userId', async (req, res) => {
       .lean();
 
     // CDN URL replacement for thumbnail
-    const CDN_URL = 'https://cdn.trackeatfit.xyz';
+    const CDN_URL = 'https://cdn.trackeatfit.me';
     const replaceCdn = url =>
       url && typeof url === 'string'
-        ? url.replace('https://cdn.trackeatfit.xyz.s3.us-east-1.amazonaws.com', CDN_URL)
+        ? url.replace('https://cdn.trackeatfit.me.s3.us-east-1.amazonaws.com', CDN_URL)
         : url;
 
     // Build a map for O(1) lookup
@@ -280,7 +280,7 @@ router.get('/recommendations/:userId', async (req, res) => {
       .lean();
 
       // Transform the results to include totalWorkouts and fix thumbnail URL
-      const CDN_URL = 'https://cdn.trackeatfit.xyz';
+      const CDN_URL = 'https://cdn.trackeatfit.me';
       const recommendations = beginnerPrograms.map(program => ({
         _id: program._id,
         programName: program.programName,
@@ -289,7 +289,7 @@ router.get('/recommendations/:userId', async (req, res) => {
         duration: program.duration,
         difficulty: program.difficulty,
         thumbnail: program.thumbnail
-          ? program.thumbnail.replace('https://cdn.trackeatfit.xyz.s3.us-east-1.amazonaws.com', CDN_URL)
+          ? program.thumbnail.replace('https://cdn.trackeatfit.me.s3.us-east-1.amazonaws.com', CDN_URL)
           : program.thumbnail,
         isFeatured: program.isFeatured,
         rating: program.rating,
@@ -449,7 +449,7 @@ router.get('/recommendations/:userId', async (req, res) => {
       duration: program.duration,
       difficulty: program.difficulty,
       thumbnail: program.thumbnail
-        ? program.thumbnail.replace('https://cdn.trackeatfit.xyz.s3.us-east-1.amazonaws.com', CDN_URL)
+        ? program.thumbnail.replace('https://cdn.trackeatfit.me.s3.us-east-1.amazonaws.com', CDN_URL)
         : program.thumbnail,
       isFeatured: program.isFeatured,
       rating: program.rating,

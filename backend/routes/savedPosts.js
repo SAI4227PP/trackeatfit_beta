@@ -36,12 +36,12 @@ router.post('/save', async (req, res) => {
             await savedPost.save();
 
             // Notify all clients about the save action, with CDN image URLs
-            const CDN_URL = 'https://cdn.trackeatfit.xyz';
+            const CDN_URL = 'https://cdn.trackeatfit.me';
             const postWithCdn = {
                 ...post.toObject(),
                 images: Array.isArray(post.images)
                     ? post.images.map(img =>
-                        img.replace('https://cdn.trackeatfit.xyz.s3.us-east-1.amazonaws.com', CDN_URL)
+                        img.replace('https://cdn.trackeatfit.me.s3.us-east-1.amazonaws.com', CDN_URL)
                     )
                     : post.images
             };
@@ -104,12 +104,12 @@ router.delete('/unsave', async (req, res) => {
 
         // Notify all clients about the unsave action, with CDN image URLs
         const post = await Post.findById(postId);
-        const CDN_URL = 'https://cdn.trackeatfit.xyz';
+        const CDN_URL = 'https://cdn.trackeatfit.me';
         const postWithCdn = post ? {
             ...post.toObject(),
             images: Array.isArray(post.images)
                 ? post.images.map(img =>
-                    img.replace('https://cdn.trackeatfit.xyz.s3.us-east-1.amazonaws.com', CDN_URL)
+                    img.replace('https://cdn.trackeatfit.me.s3.us-east-1.amazonaws.com', CDN_URL)
                 )
                 : post.images
         } : undefined;
@@ -290,13 +290,13 @@ router.get('/user/:userId', async (req, res) => {
         ]);
 
         // Replace S3 URLs with CDN in images for each post
-        const CDN_URL = 'https://cdn.trackeatfit.xyz';
+        const CDN_URL = 'https://cdn.trackeatfit.me';
         posts = posts.map(post => ({
             _id: post._id,
             content: post.content,
             images: Array.isArray(post.images)
                 ? post.images.map(img =>
-                    img.replace('https://cdn.trackeatfit.xyz.s3.us-east-1.amazonaws.com', CDN_URL)
+                    img.replace('https://cdn.trackeatfit.me.s3.us-east-1.amazonaws.com', CDN_URL)
                 )
                 : post.images,
             userId: post.userId,

@@ -38,13 +38,13 @@ router.get('/:userId', async (req, res) => {
                     rating: 1
                 }
             });
-        const CDN_URL = 'https://cdn.trackeatfit.xyz';
+        const CDN_URL = 'https://cdn.trackeatfit.me';
         const filteredFavorites = favorites
             .filter(fav => fav.exerciseId !== null)
             .map(fav => {
                 if (fav.exerciseId && fav.exerciseId.mainImage) {
                     fav.exerciseId.mainImage = fav.exerciseId.mainImage.replace(
-                        'https://cdn.trackeatfit.xyz.s3.us-east-1.amazonaws.com',
+                        'https://cdn.trackeatfit.me.s3.us-east-1.amazonaws.com',
                         CDN_URL
                     );
                 }

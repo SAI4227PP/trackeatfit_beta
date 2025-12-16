@@ -37,9 +37,9 @@ router.post('/like', async (req, res) => {
     await newLike.save();
 
     // Replace S3 URLs with CDN for profilepic only
-    const CDN_URL = 'https://cdn.trackeatfit.xyz';
+    const CDN_URL = 'https://cdn.trackeatfit.me';
     if (newLike.profilepic && typeof newLike.profilepic === 'string') {
-      newLike.profilepic = newLike.profilepic.replace('https://cdn.trackeatfit.xyz.s3.us-east-1.amazonaws.com', CDN_URL);
+      newLike.profilepic = newLike.profilepic.replace('https://cdn.trackeatfit.me.s3.us-east-1.amazonaws.com', CDN_URL);
     }
 
     // Notify all clients about the new like
@@ -88,9 +88,9 @@ router.delete('/remove-like', async (req, res) => {
     }
 
     // Replace S3 URLs with CDN for profilepic only
-    const CDN_URL = 'https://cdn.trackeatfit.xyz';
+    const CDN_URL = 'https://cdn.trackeatfit.me';
     let profilepic = like && like.profilepic && typeof like.profilepic === 'string'
-      ? like.profilepic.replace('https://cdn.trackeatfit.xyz.s3.us-east-1.amazonaws.com', CDN_URL)
+      ? like.profilepic.replace('https://cdn.trackeatfit.me.s3.us-east-1.amazonaws.com', CDN_URL)
       : (like ? like.profilepic : undefined);
 
     // Notify all clients about the removed like

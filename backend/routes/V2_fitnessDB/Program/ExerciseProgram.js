@@ -65,7 +65,7 @@ router.get('/', async (req, res) => {
       ExerciseProgram.countDocuments(filters)
     ]);
 
-    const CDN_URL = 'https://cdn.trackeatfit.xyz';
+    const CDN_URL = 'https://cdn.trackeatfit.me';
     const updatedPrograms = programs.map(program => {
       const totalWorkouts = Array.isArray(program.schedule)
         ? program.schedule.reduce((sum, day) => sum + (Array.isArray(day.exercises) ? day.exercises.length : 0), 0)
@@ -78,7 +78,7 @@ router.get('/', async (req, res) => {
         duration: program.duration,
         difficulty: program.difficulty,
         thumbnail: program.thumbnail
-          ? program.thumbnail.replace('https://cdn.trackeatfit.xyz.s3.us-east-1.amazonaws.com', CDN_URL)
+          ? program.thumbnail.replace('https://cdn.trackeatfit.me.s3.us-east-1.amazonaws.com', CDN_URL)
           : program.thumbnail,
         isFeatured: program.isFeatured,
         rating: program.rating,
@@ -126,10 +126,10 @@ router.get('/:id', async (req, res) => {
     }
 
     // CDN URL replacement
-    const CDN_URL = 'https://cdn.trackeatfit.xyz';
+    const CDN_URL = 'https://cdn.trackeatfit.me';
     const replaceCdn = url =>
       url && typeof url === 'string'
-        ? url.replace('https://cdn.trackeatfit.xyz.s3.us-east-1.amazonaws.com', CDN_URL)
+        ? url.replace('https://cdn.trackeatfit.me.s3.us-east-1.amazonaws.com', CDN_URL)
         : url;
 
     // 🚀 Optimized Structuring: only what's needed

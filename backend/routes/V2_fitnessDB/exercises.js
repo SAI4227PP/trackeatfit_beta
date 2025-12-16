@@ -37,10 +37,10 @@ router.get('/', async (req, res) => {
             Exercise.find({}).skip(skip).limit(limit),
             Exercise.countDocuments()
         ]);
-        const CDN_URL = 'https://cdn.trackeatfit.xyz';
+        const CDN_URL = 'https://cdn.trackeatfit.me';
         const updatedExercises = exercises.map(ex => ({
             ...ex.toObject(),
-            image: ex.image.replace('https://cdn.trackeatfit.xyz.s3.us-east-1.amazonaws.com', CDN_URL)
+            image: ex.image.replace('https://cdn.trackeatfit.me.s3.us-east-1.amazonaws.com', CDN_URL)
         }));
         const response = {
             data: updatedExercises,
@@ -68,10 +68,10 @@ router.get('/bodypart/:bodyPart', async (req, res) => {
             Exercise.find({ bodyParts: bodyPart }).skip(skip).limit(limit),
             Exercise.countDocuments({ bodyParts: bodyPart })
         ]);
-        const CDN_URL = 'https://cdn.trackeatfit.xyz';
+        const CDN_URL = 'https://cdn.trackeatfit.me';
         const updatedExercises = exercises.map(ex => ({
             ...ex.toObject(),
-            image: ex.image.replace('https://cdn.trackeatfit.xyz.s3.us-east-1.amazonaws.com', CDN_URL)
+            image: ex.image.replace('https://cdn.trackeatfit.me.s3.us-east-1.amazonaws.com', CDN_URL)
         }));
         const response = {
             data: updatedExercises,
@@ -99,10 +99,10 @@ router.get('/equipment/:equipment', async (req, res) => {
             Exercise.find({ equipments: equipment }).skip(skip).limit(limit),
             Exercise.countDocuments({ equipments: equipment })
         ]);
-        const CDN_URL = 'https://cdn.trackeatfit.xyz';
+        const CDN_URL = 'https://cdn.trackeatfit.me';
         const updatedExercises = exercises.map(ex => ({
             ...ex.toObject(),
-            image: ex.image.replace('https://cdn.trackeatfit.xyz.s3.us-east-1.amazonaws.com', CDN_URL)
+            image: ex.image.replace('https://cdn.trackeatfit.me.s3.us-east-1.amazonaws.com', CDN_URL)
         }));
         const response = {
             data: updatedExercises,
@@ -130,10 +130,10 @@ router.get('/exercisetype/:exerciseType', async (req, res) => {
             Exercise.find({ exerciseType }).skip(skip).limit(limit),
             Exercise.countDocuments({ exerciseType })
         ]);
-        const CDN_URL = 'https://cdn.trackeatfit.xyz';
+        const CDN_URL = 'https://cdn.trackeatfit.me';
         const updatedExercises = exercises.map(ex => ({
             ...ex.toObject(),
-            image: ex.image.replace('https://cdn.trackeatfit.xyz.s3.us-east-1.amazonaws.com', CDN_URL)
+            image: ex.image.replace('https://cdn.trackeatfit.me.s3.us-east-1.amazonaws.com', CDN_URL)
         }));
         const response = {
             data: updatedExercises,

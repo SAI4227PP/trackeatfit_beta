@@ -30,10 +30,10 @@ router.use(setCloudflareCacheHeader);
 router.get('/', async (req, res) => {
     try {
         const equipments = await Equipment.find({});
-        const CDN_URL = 'https://cdn.trackeatfit.xyz';
+        const CDN_URL = 'https://cdn.trackeatfit.me';
         const updatedEquipments = equipments.map(eq => ({
             ...eq.toObject(),
-            image: eq.image.replace('https://cdn.trackeatfit.xyz.s3.us-east-1.amazonaws.com', CDN_URL)
+            image: eq.image.replace('https://cdn.trackeatfit.me.s3.us-east-1.amazonaws.com', CDN_URL)
         }));
         res.set('Cache-Control', 'public, max-age=86400, stale-while-revalidate=60');
         res.json(updatedEquipments);
