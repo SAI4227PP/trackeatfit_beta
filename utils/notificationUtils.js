@@ -6,7 +6,7 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import { PermissionsAndroid, Platform } from "react-native";
 
 // Add logging utility
-const NOTIFICATION_LOGS_KEY = "notificationLogs";
+const NOTIFICATION_LOGS_KEY = "userNotifications";
 
 const logEvent = async (event, details) => {
   const timestamp = new Date().toISOString();
