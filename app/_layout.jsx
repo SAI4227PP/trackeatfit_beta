@@ -21,10 +21,21 @@ import GlobalProvider from "../context/GlobalProvider";
 import { GoogleFitProvider } from "../context/GoogleFitContext";
 import { LanguageProvider } from "../context/LanguageContext";
 import { ThemeProvider } from "../context/ThemeContext";
+import { storeNotification } from "../utils/notificationUtils";
 
 // Background notification handler
 messaging().setBackgroundMessageHandler(async (remoteMessage) => {
   console.log("[FCM] Background message received:", remoteMessage);
+
+  // Store notification for history
+  await storeNotification({
+    title: remoteMessage.notification?.title || "Notification",
+    message: remoteMessage.notification?.body || "",
+    time: new Date().toISOString(),
+    type: remoteMessage.data?.type || remoteMessage.data?.category || "system",
+    data: remoteMessage.data,
+    read: false,
+  });
 
   // Display notification using notifee
   await notifee.displayNotification({
@@ -199,62 +210,155 @@ const RootLayout = () => {
   }, [fadeAnim, scaleAnim, fontsLoaded, fontError]);
 
   useEffect(() => {
-    const createChannels = async () => {
-      await notifee.createChannel({
-        id: "default",
-        name: "Default Channel",
-        importance: AndroidImportance.HIGH,
-        sound: "default",
-      });
-      await notifee.createChannel({
-        id: "meal_reminder",
-        name: "Meal Reminders",
-        importance: AndroidImportance.HIGH,
-        sound: "default",
-      });
-      await notifee.createChannel({
-        id: "water_reminder",
-        name: "Water Reminders",
-        importance: AndroidImportance.HIGH,
-        sound: "default",
-      });
-      await notifee.createChannel({
-        id: "payment_success",
-        name: "Payment Success",
-        importance: AndroidImportance.HIGH,
-        sound: "default",
-      });
-      await notifee.createChannel({
-        id: "payment_failed",
-        name: "Payment Failed",
-        importance: AndroidImportance.HIGH,
-        sound: "default",
-      });
+    const initializeNotifications = async () => {
+      try {
+        console.log("[Notifications] Initializing notification system...");
+
+        // Request notification permissions
+        const authStatus = await messaging().requestPermission();
+        const enabled =
+          authStatus === messaging.AuthorizationStatus.AUTHORIZED ||
+          authStatus === messaging.AuthorizationStatus.PROVISIONAL;
+
+        if (enabled) {
+          console.log("[Notifications] Permission granted:", authStatus);
+        } else {
+          console.warn("[Notifications] Permission denied");
+        }
+
+        // Create notification channels
+        await notifee.createChannel({
+          id: "default",
+          name: "Default Channel",
+          importance: AndroidImportance.HIGH,
+          sound: "default",
+        });
+        await notifee.createChannel({
+          id: "meal_reminder",
+          name: "Meal Reminders",
+          importance: AndroidImportance.HIGH,
+          sound: "default",
+        });
+        await notifee.createChannel({
+          id: "water_reminder",
+          name: "Water Reminders",
+          importance: AndroidImportance.HIGH,
+          sound: "default",
+        });
+        await notifee.createChannel({
+          id: "exercise_reminder",
+          name: "Exercise Reminders",
+          importance: AndroidImportance.HIGH,
+          sound: "default",
+        });
+        await notifee.createChannel({
+          id: "weight_tracking",
+          name: "Weight Tracking",
+          importance: AndroidImportance.HIGH,
+          sound: "default",
+        });
+        await notifee.createChannel({
+          id: "sleep_reminder",
+          name: "Sleep Reminders",
+          importance: AndroidImportance.HIGH,
+          sound: "default",
+        });
+        await notifee.createChannel({
+          id: "milestone_achievement",
+          name: "Achievements",
+          importance: AndroidImportance.HIGH,
+          sound: "default",
+        });
+        await notifee.createChannel({
+          id: "weekly_report",
+          name: "Weekly Reports",
+          importance: AndroidImportance.HIGH,
+          sound: "default",
+        });
+        await notifee.createChannel({
+          id: "streak_reminder",
+          name: "Streak Reminders",
+          importance: AndroidImportance.HIGH,
+          sound: "default",
+        });
+        await notifee.createChannel({
+          id: "payment_success",
+          name: "Payment Success",
+          importance: AndroidImportance.HIGH,
+          sound: "default",
+        });
+        await notifee.createChannel({
+          id: "payment_failed",
+          name: "Payment Failed",
+          importance: AndroidImportance.HIGH,
+          sound: "default",
+        });
+        await notifee.createChannel({
+          id: "chat",
+          name: "Chat Messages",
+          importance: AndroidImportance.HIGH,
+          sound: "default",
+        });
+
+        console.log("[Notifications] All notification channels created");
+      } catch (error) {
+        console.error("[Notifications] Initialization error:", error);
+      }
     };
-    createChannels();
+
+    initializeNotifications();
   }, []);
 
   // FCM foreground message handler
   useEffect(() => {
-    const unsubscribe = messaging().onMessage(async (remoteMessage) => {
-      console.log("[FCM] Foreground message received:", remoteMessage);
+    console.log("[FCM] Setting up foreground message handler...");
 
-      // Display notification in foreground using notifee
-      await notifee.displayNotification({
-        title: remoteMessage.notification?.title || "Notification",
-        body: remoteMessage.notification?.body || "",
-        data: remoteMessage.data,
-        android: {
-          channelId: remoteMessage.data?.category || "default",
-          importance: AndroidImportance.HIGH,
-          pressAction: {
-            id: "default",
+    const unsubscribe = messaging().onMessage(async (remoteMessage) => {
+      console.log(
+        "[FCM] Foreground message received:",
+        JSON.stringify(remoteMessage, null, 2),
+      );
+
+      try {
+        // Store notification for history
+        await storeNotification({
+          title: remoteMessage.notification?.title || "Notification",
+          message: remoteMessage.notification?.body || "",
+          time: new Date().toISOString(),
+          type:
+            remoteMessage.data?.type ||
+            remoteMessage.data?.category ||
+            "system",
+          data: remoteMessage.data,
+          read: false,
+        });
+        console.log("[FCM] Notification stored successfully");
+
+        // Display notification in foreground using notifee
+        const notificationId = await notifee.displayNotification({
+          title: remoteMessage.notification?.title || "Notification",
+          body: remoteMessage.notification?.body || "",
+          data: remoteMessage.data,
+          android: {
+            channelId: remoteMessage.data?.category || "default",
+            importance: AndroidImportance.HIGH,
+            sound: "default",
+            pressAction: {
+              id: "default",
+            },
           },
-        },
-      });
+        });
+        console.log("[FCM] Notification displayed with ID:", notificationId);
+      } catch (error) {
+        console.error("[FCM] Error handling notification:", error);
+      }
     });
 
-    return unsubscribe;
+    console.log("[FCM] Foreground message handler registered");
+    return () => {
+      console.log("[FCM] Unsubscribing from foreground messages");
+      unsubscribe();
+    };
   }, []);
 
   // Navigation observer
