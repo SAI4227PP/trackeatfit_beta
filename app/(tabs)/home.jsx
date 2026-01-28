@@ -439,7 +439,9 @@ const Home = () => {
 
   // Add to navigation handlers
   const handleLevelProgress = () => {
-    navigation.navigate('Home/LevelProgress');
+    // navigation.navigate('Home/LevelProgress');
+        navigation.navigate('Payment/subscription');
+
   };
 
   // Add new handler for calorie goal navigation

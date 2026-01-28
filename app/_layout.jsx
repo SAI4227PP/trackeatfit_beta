@@ -1,40 +1,68 @@
-import notifee, { AndroidImportance } from '@notifee/react-native';
-import AsyncStorage from '@react-native-async-storage/async-storage';
-import { useFonts } from 'expo-font';
-import { LinearGradient } from 'expo-linear-gradient';
-import { router, SplashScreen, Stack, useRootNavigationState, useSegments } from 'expo-router';
-import React, { useCallback, useEffect, useRef } from 'react';
-import { ActivityIndicator, Animated, Image, Text, View } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
-import images from '../constants/images';
-import { CaloriesProvider } from '../context/CaloriesContext';
-import GlobalProvider from '../context/GlobalProvider';
-import { GoogleFitProvider } from '../context/GoogleFitContext';
-import { LanguageProvider } from '../context/LanguageContext';
-import { ThemeProvider } from '../context/ThemeContext';
+import "../global.css";
+
+import notifee, { AndroidImportance } from "@notifee/react-native";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import messaging from "@react-native-firebase/messaging";
+import { useFonts } from "expo-font";
+import { LinearGradient } from "expo-linear-gradient";
+import {
+  router,
+  SplashScreen,
+  Stack,
+  useRootNavigationState,
+  useSegments,
+} from "expo-router";
+import React, { useCallback, useEffect, useRef } from "react";
+import { ActivityIndicator, Animated, Image, Text, View } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
+import images from "../constants/images";
+import { CaloriesProvider } from "../context/CaloriesContext";
+import GlobalProvider from "../context/GlobalProvider";
+import { GoogleFitProvider } from "../context/GoogleFitContext";
+import { LanguageProvider } from "../context/LanguageContext";
+import { ThemeProvider } from "../context/ThemeContext";
+
+// Background notification handler
+messaging().setBackgroundMessageHandler(async (remoteMessage) => {
+  console.log("[FCM] Background message received:", remoteMessage);
+
+  // Display notification using notifee
+  await notifee.displayNotification({
+    title: remoteMessage.notification?.title || "Notification",
+    body: remoteMessage.notification?.body || "",
+    data: remoteMessage.data,
+    android: {
+      channelId: remoteMessage.data?.category || "default",
+      importance: AndroidImportance.HIGH,
+      pressAction: {
+        id: "default",
+      },
+    },
+  });
+});
 
 notifee.onBackgroundEvent(async ({ type, detail }) => {
-  console.log('[Notifee] Background event:', type, detail);
+  console.log("[Notifee] Background event:", type, detail);
 });
 
 const linking = {
-  prefixes: ['https://trackeatfit.xyz', 'com.inc.TrackEatFit://'],
+  prefixes: ["https://trackeatfit.xyz", "com.inc.TrackEatFit://"],
   config: {
     screens: {
-      '(auth)': {
+      "(auth)": {
         screens: {
-          login: 'login',
-          register: 'register',
+          login: "login",
+          register: "register",
         },
       },
-      '(tabs)': {
+      "(tabs)": {
         screens: {
-          home: 'home',
-          profile: 'profile',
+          home: "home",
+          profile: "profile",
         },
       },
-      PostDetails: 'posts/:postId',
-      index: '',
+      PostDetails: "posts/:postId",
+      index: "",
     },
   },
 };
@@ -74,31 +102,31 @@ const RootLayout = () => {
   const checkAuthAndNavigate = useCallback(async () => {
     try {
       const [token, userStr] = await Promise.all([
-        AsyncStorage.getItem('authToken'),
-        AsyncStorage.getItem('user'),
+        AsyncStorage.getItem("authToken"),
+        AsyncStorage.getItem("user"),
       ]);
 
       const isAuthenticated = !!(token && userStr);
-      const inAuthGroup = segments[0] === '(auth)';
-      const inTabsGroup = segments[0] === '(tabs)';
-      const isProfileScreen = segments.includes('Profile');
-      const isIndexScreen = segments.length === 0 || segments[0] === 'index';
+      const inAuthGroup = segments[0] === "(auth)";
+      const inTabsGroup = segments[0] === "(tabs)";
+      const isProfileScreen = segments.includes("Profile");
+      const isIndexScreen = segments.length === 0 || segments[0] === "index";
 
       if (isAuthenticated) {
         if (inAuthGroup || isIndexScreen) {
-          router.replace('/(tabs)/home');
+          router.replace("/(tabs)/home");
         }
       } else {
         if (!isIndexScreen && !inAuthGroup) {
           if (isProfileScreen || inTabsGroup) {
-            console.log('Unauthorized access, redirecting to index...');
-            router.replace('/');
+            console.log("Unauthorized access, redirecting to index...");
+            router.replace("/");
           }
         }
       }
     } catch (error) {
-      console.error('Navigation check failed:', error);
-      router.replace('/');
+      console.error("Navigation check failed:", error);
+      router.replace("/");
     }
   }, [segments]);
 
@@ -123,7 +151,7 @@ const RootLayout = () => {
   useEffect(() => {
     if (fontError) {
       setHasError(true);
-      console.error('Font loading error:', fontError);
+      console.error("Font loading error:", fontError);
     }
   }, [fontError]);
 
@@ -172,12 +200,61 @@ const RootLayout = () => {
 
   useEffect(() => {
     const createChannels = async () => {
-      await notifee.createChannel({ id: 'default', name: 'Default Channel', importance: AndroidImportance.HIGH, sound: 'default' });
-      await notifee.createChannel({ id: 'meal_reminder', name: 'Meal Reminders', importance: AndroidImportance.HIGH, sound: 'default' });
-      await notifee.createChannel({ id: 'payment_success', name: 'Payment Success', importance: AndroidImportance.HIGH, sound: 'default' });
-      await notifee.createChannel({ id: 'payment_failed', name: 'Payment Failed', importance: AndroidImportance.HIGH, sound: 'default' });
+      await notifee.createChannel({
+        id: "default",
+        name: "Default Channel",
+        importance: AndroidImportance.HIGH,
+        sound: "default",
+      });
+      await notifee.createChannel({
+        id: "meal_reminder",
+        name: "Meal Reminders",
+        importance: AndroidImportance.HIGH,
+        sound: "default",
+      });
+      await notifee.createChannel({
+        id: "water_reminder",
+        name: "Water Reminders",
+        importance: AndroidImportance.HIGH,
+        sound: "default",
+      });
+      await notifee.createChannel({
+        id: "payment_success",
+        name: "Payment Success",
+        importance: AndroidImportance.HIGH,
+        sound: "default",
+      });
+      await notifee.createChannel({
+        id: "payment_failed",
+        name: "Payment Failed",
+        importance: AndroidImportance.HIGH,
+        sound: "default",
+      });
     };
     createChannels();
+  }, []);
+
+  // FCM foreground message handler
+  useEffect(() => {
+    const unsubscribe = messaging().onMessage(async (remoteMessage) => {
+      console.log("[FCM] Foreground message received:", remoteMessage);
+
+      // Display notification in foreground using notifee
+      await notifee.displayNotification({
+        title: remoteMessage.notification?.title || "Notification",
+        body: remoteMessage.notification?.body || "",
+        data: remoteMessage.data,
+        android: {
+          channelId: remoteMessage.data?.category || "default",
+          importance: AndroidImportance.HIGH,
+          pressAction: {
+            id: "default",
+          },
+        },
+      });
+    });
+
+    return unsubscribe;
   }, []);
 
   // Navigation observer
@@ -190,7 +267,7 @@ const RootLayout = () => {
       screenEnterTimeRef.current = Date.now();
 
       // Track home page visit
-      if (currentRouteName === 'home' && !homeLoadedFiredRef.current) {
+      if (currentRouteName === "home" && !homeLoadedFiredRef.current) {
         homeLoadedFiredRef.current = true;
       }
     }
@@ -198,25 +275,56 @@ const RootLayout = () => {
 
   if (hasError) {
     return (
-      <SafeAreaView style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: 'white' }}>
-        <Text style={{ color: '#ef4444' }}>Something went wrong. Please restart the app.</Text>
+      <SafeAreaView
+        style={{
+          flex: 1,
+          justifyContent: "center",
+          alignItems: "center",
+          backgroundColor: "white",
+        }}
+      >
+        <Text style={{ color: "#ef4444" }}>
+          Something went wrong. Please restart the app.
+        </Text>
       </SafeAreaView>
     );
   }
 
   if (!fontsLoaded && !fontError) {
     return (
-      <SafeAreaView style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: 'white' }}>
-        <LinearGradient colors={["rgba(255,215,0,0.1)", "rgba(255,215,0,0.05)"]} style={{ padding: 32, borderRadius: 24, alignItems: 'center' }}>
-          <Animated.View style={{ opacity: fadeAnim, transform: [{ scale: scaleAnim }] }}>
-            <Image source={images.Premium_icon} style={{ width: 112, height: 112, marginBottom: 24 }} resizeMode="contain" />
-            <View style={{ alignItems: 'center', rowGap: 12 }}>
-              <Text style={{ fontSize: 24, fontWeight: 'bold', color: '#1a202c' }}>
-                Track<Text style={{ color: '#FFD700' }}>EatFit</Text>
+      <SafeAreaView
+        style={{
+          flex: 1,
+          justifyContent: "center",
+          alignItems: "center",
+          backgroundColor: "white",
+        }}
+      >
+        <LinearGradient
+          colors={["rgba(255,215,0,0.1)", "rgba(255,215,0,0.05)"]}
+          style={{ padding: 32, borderRadius: 24, alignItems: "center" }}
+        >
+          <Animated.View
+            style={{ opacity: fadeAnim, transform: [{ scale: scaleAnim }] }}
+          >
+            <Image
+              source={images.Premium_icon}
+              style={{ width: 112, height: 112, marginBottom: 24 }}
+              resizeMode="contain"
+            />
+            <View style={{ alignItems: "center", rowGap: 12 }}>
+              <Text
+                style={{ fontSize: 24, fontWeight: "bold", color: "#1a202c" }}
+              >
+                Track<Text style={{ color: "#FFD700" }}>EatFit</Text>
               </Text>
-              <Text style={{ fontSize: 14, color: '#718096', textAlign: 'center' }}>Initializing your wellness journey...</Text>
+              <Text
+                style={{ fontSize: 14, color: "#718096", textAlign: "center" }}
+              >
+                Initializing your wellness journey...
+              </Text>
             </View>
-            <View style={{ marginTop: 32, alignItems: 'center' }}>
+            <View style={{ marginTop: 32, alignItems: "center" }}>
               <ActivityIndicator size="large" color="#FFA000" />
             </View>
           </Animated.View>
@@ -231,11 +339,46 @@ const RootLayout = () => {
         <ThemeProvider>
           <LanguageProvider>
             <GoogleFitProvider>
-              <Stack screenOptions={{ headerShown: false, gestureEnabled: false, animation: 'slide_from_right' }}>
-                <Stack.Screen name="(auth)" options={{ headerShown: false, gestureEnabled: true }} />
-                <Stack.Screen name="(tabs)" options={{ headerShown: false, gestureEnabled: false }} />
-                {["index", "Search", "Nutrition", "Goal", "Micronutrients", "FoodDetails", "RecipeDetails", "RecipeSearch", "Meals_complete", "favorite", "Adddevice", "Posts", "geminichat", "DietPlanner", "GoogleFitApi", "BluetoothHealthTracker", "Community/EditProfile", "EditMealCard"].map(screen => (
-                  <Stack.Screen key={screen} name={screen} options={{ headerShown: false }} />
+              <Stack
+                screenOptions={{
+                  headerShown: false,
+                  gestureEnabled: false,
+                  animation: "slide_from_right",
+                }}
+              >
+                <Stack.Screen
+                  name="(auth)"
+                  options={{ headerShown: false, gestureEnabled: true }}
+                />
+                <Stack.Screen
+                  name="(tabs)"
+                  options={{ headerShown: false, gestureEnabled: false }}
+                />
+                {[
+                  "index",
+                  "Search",
+                  "Nutrition",
+                  "Goal",
+                  "Micronutrients",
+                  "FoodDetails",
+                  "RecipeDetails",
+                  "RecipeSearch",
+                  "Meals_complete",
+                  "favorite",
+                  "Adddevice",
+                  "Posts",
+                  "geminichat",
+                  "DietPlanner",
+                  "GoogleFitApi",
+                  "BluetoothHealthTracker",
+                  "Community/EditProfile",
+                  "EditMealCard",
+                ].map((screen) => (
+                  <Stack.Screen
+                    key={screen}
+                    name={screen}
+                    options={{ headerShown: false }}
+                  />
                 ))}
               </Stack>
             </GoogleFitProvider>
@@ -248,4 +391,3 @@ const RootLayout = () => {
 
 export { linking };
 export default RootLayout;
-
