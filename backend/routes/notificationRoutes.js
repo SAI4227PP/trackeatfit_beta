@@ -12,17 +12,33 @@ const userSchedules = new Map();
 // --- Dynamic Per-User Meal Reminder Scheduling ---
 
 /**
- * Converts a Date object to cron time format (minutes and hours)
- * @param {Date} time - The time to convert
+ * Converts a Date object or time string to cron time format (minutes and hours)
+ * @param {Date|String} time - The time to convert
  * @returns {string} Cron time string (e.g., "30 8" for 8:30)
  */
 const dateToCronTime = (time) => {
-  const date = new Date(time);
+  let date;
+
+  if (typeof time === "string") {
+    // Handle time strings like "08:30" or ISO date strings
+    if (time.includes(":") && !time.includes("T")) {
+      // HH:MM format
+      const [hours, minutes] = time.split(":");
+      date = new Date();
+      date.setHours(parseInt(hours, 10), parseInt(minutes, 10), 0, 0);
+    } else {
+      date = new Date(time);
+    }
+  } else {
+    date = new Date(time);
+  }
+
   // Validate date
   if (isNaN(date.getTime())) {
     console.error("[dateToCronTime] Invalid date provided:", time);
-    return "0 0"; // Default to midnight if invalid
+    return "0 8"; // Default to 8:00 AM if invalid
   }
+
   const minutes = date.getMinutes();
   const hours = date.getHours();
   return `${minutes} ${hours}`;
@@ -31,7 +47,7 @@ const dateToCronTime = (time) => {
 /**
  * Creates cron jobs for a user's custom water reminder schedule
  * @param {string} userId - The user's ID
- * @param {Object} waterSchedule - Water reminder schedule with intervalHours, startTime, endTime, enabled
+ * @param {Object} waterSchedule - Water reminder schedule with intervalHours, startTime, endTime
  */
 const scheduleUserWaterReminders = (userId, waterSchedule) => {
   const waterScheduleKey = `${userId}_water`;
@@ -43,96 +59,123 @@ const scheduleUserWaterReminders = (userId, waterSchedule) => {
     userSchedules.delete(waterScheduleKey);
   }
 
-  if (!waterSchedule) {
-    console.log(`[WaterSchedule] No water schedule for userId: ${userId}`);
-    return;
-  }
-
-  // Check NotificationSettings to see if water reminders are enabled
-  NotificationSettings.findOne({ userId })
-    .then((settings) => {
-      if (!settings?.nutrition?.waterReminders?.enabled) {
-        console.log(
-          `[WaterSchedule] Water reminders disabled in settings for userId: ${userId}`,
-        );
-        return;
-      }
-    })
-    .catch((err) => {
-      console.error(
-        `[WaterSchedule] Error checking settings for userId: ${userId}:`,
-        err,
-      );
-    });
-
-  const intervalHours = waterSchedule.intervalHours || 2;
-
-  // Schedule water reminder to run every X hours
-  const cronPattern = `0 */${intervalHours} * * *`; // Every X hours at minute 0
-
-  if (!cron.validate(cronPattern)) {
-    console.error(
-      `[WaterSchedule] Invalid cron pattern: ${cronPattern} for userId: ${userId}`,
-    );
-    return;
-  }
-
-  const schedule = cron.schedule(cronPattern, async () => {
-    // Check if current time is within user's preferred time range
-    const now = new Date();
-    const currentHour = now.getHours();
-    const currentMinutes = now.getMinutes();
-    const currentTimeInMinutes = currentHour * 60 + currentMinutes;
-
-    if (waterSchedule.startTime && waterSchedule.endTime) {
-      const startDate = new Date(waterSchedule.startTime);
-      const endDate = new Date(waterSchedule.endTime);
-      const startTimeInMinutes =
-        startDate.getHours() * 60 + startDate.getMinutes();
-      const endTimeInMinutes = endDate.getHours() * 60 + endDate.getMinutes();
-
-      if (
-        currentTimeInMinutes < startTimeInMinutes ||
-        currentTimeInMinutes > endTimeInMinutes
-      ) {
-        console.log(
-          `[WaterSchedule] Current time ${currentHour}:${currentMinutes} is outside user's preferred range (${startDate.getHours()}:${startDate.getMinutes()} - ${endDate.getHours()}:${endDate.getMinutes()}) for userId: ${userId}`,
-        );
-        return;
-      }
-    }
-
+  if (!waterSchedule || !waterSchedule.intervalHours) {
     console.log(
-      `[WaterSchedule] Sending water reminder to userId: ${userId} at ${now.toISOString()}`,
+      `[WaterSchedule] No valid water schedule for userId: ${userId}`,
     );
-    try {
-      const settings = await NotificationSettings.findOne({ userId });
-      if (settings?.nutrition?.waterReminders?.enabled) {
-        await notificationService.sendWaterReminder(userId);
-        console.log(`[WaterSchedule] Water reminder sent to userId: ${userId}`);
-      } else {
-        console.log(
-          `[WaterSchedule] Water reminders disabled in settings for userId: ${userId}`,
-        );
+    return;
+  }
+
+  const intervalHours = Math.max(
+    1,
+    Math.min(12, waterSchedule.intervalHours || 2),
+  );
+
+  // Parse start and end times properly
+  let startHour = 8,
+    startMinute = 0,
+    endHour = 22,
+    endMinute = 0;
+
+  if (waterSchedule.startTime) {
+    if (
+      typeof waterSchedule.startTime === "string" &&
+      waterSchedule.startTime.includes(":")
+    ) {
+      const [h, m] = waterSchedule.startTime.split(":");
+      startHour = parseInt(h, 10);
+      startMinute = parseInt(m, 10);
+    } else {
+      const startDate = new Date(waterSchedule.startTime);
+      if (!isNaN(startDate.getTime())) {
+        startHour = startDate.getHours();
+        startMinute = startDate.getMinutes();
       }
-    } catch (error) {
-      console.error(
-        `[WaterSchedule] Error sending water reminder to userId: ${userId}:`,
-        error,
+    }
+  }
+
+  if (waterSchedule.endTime) {
+    if (
+      typeof waterSchedule.endTime === "string" &&
+      waterSchedule.endTime.includes(":")
+    ) {
+      const [h, m] = waterSchedule.endTime.split(":");
+      endHour = parseInt(h, 10);
+      endMinute = parseInt(m, 10);
+    } else {
+      const endDate = new Date(waterSchedule.endTime);
+      if (!isNaN(endDate.getTime())) {
+        endHour = endDate.getHours();
+        endMinute = endDate.getMinutes();
+      }
+    }
+  }
+
+  // Create multiple schedules within the time range
+  const schedules = [];
+  const startTimeMinutes = startHour * 60 + startMinute;
+  const endTimeMinutes = endHour * 60 + endMinute;
+  const intervalMinutes = intervalHours * 60;
+
+  // Calculate all reminder times within the range
+  for (
+    let timeMinutes = startTimeMinutes;
+    timeMinutes <= endTimeMinutes;
+    timeMinutes += intervalMinutes
+  ) {
+    const hour = Math.floor(timeMinutes / 60) % 24;
+    const minute = timeMinutes % 60;
+
+    const cronPattern = `${minute} ${hour} * * *`;
+
+    if (cron.validate(cronPattern)) {
+      const schedule = cron.schedule(cronPattern, async () => {
+        console.log(
+          `[WaterSchedule] Sending scheduled water reminder to userId: ${userId} at ${new Date().toISOString()}`,
+        );
+        try {
+          const settings = await NotificationSettings.findOne({ userId });
+          if (settings?.nutrition?.waterReminders?.enabled) {
+            await notificationService.sendWaterReminder(userId);
+            console.log(
+              `[WaterSchedule] Water reminder sent to userId: ${userId}`,
+            );
+          } else {
+            console.log(
+              `[WaterSchedule] Water reminders disabled in settings for userId: ${userId}`,
+            );
+          }
+        } catch (error) {
+          console.error(
+            `[WaterSchedule] Error sending water reminder to userId: ${userId}:`,
+            error,
+          );
+        }
+      });
+
+      schedules.push(schedule);
+      console.log(
+        `[WaterSchedule] Scheduled water reminder at ${hour.toString().padStart(2, "0")}:${minute.toString().padStart(2, "0")} for userId: ${userId}`,
       );
     }
-  });
+  }
 
-  userSchedules.set(waterScheduleKey, [schedule]);
-  console.log(
-    `[WaterSchedule] Scheduled water reminders every ${intervalHours} hours for userId: ${userId}`,
-  );
+  if (schedules.length > 0) {
+    userSchedules.set(waterScheduleKey, schedules);
+    console.log(
+      `[WaterSchedule] Total ${schedules.length} water reminder slots scheduled for userId: ${userId} every ${intervalHours} hours`,
+    );
+  } else {
+    console.warn(
+      `[WaterSchedule] No valid schedules created for userId: ${userId}`,
+    );
+  }
 };
 
 /**
  * Creates cron jobs for a user's custom meal schedule
  * @param {string} userId - The user's ID
- * @param {Array} meals - Array of meal objects with type, time, and enabled properties
+ * @param {Array} meals - Array of meal objects with type and time properties
  */
 const scheduleUserMealReminders = (userId, meals) => {
   // Clear existing schedules for this user
@@ -149,60 +192,83 @@ const scheduleUserMealReminders = (userId, meals) => {
 
   const schedules = [];
 
-  meals.forEach((meal) => {
+  meals.forEach((meal, index) => {
     // Validate meal object
     if (!meal || !meal.type || !meal.time) {
       console.warn(
-        `[UserSchedule] Invalid meal object for userId: ${userId}:`,
+        `[UserSchedule] Invalid meal object for userId: ${userId} at index ${index}:`,
         meal,
       );
       return;
     }
 
-    const cronTime = dateToCronTime(meal.time);
+    try {
+      const cronTime = dateToCronTime(meal.time);
+      const cronPattern = `${cronTime} * * *`;
 
-    // Validate cron time format (5 fields: minute hour day month weekday)
-    if (!cron.validate(`${cronTime} * * * *`)) {
-      console.error(
-        `[UserSchedule] Invalid cron format: ${cronTime} for meal: ${meal.type}`,
-      );
-      return;
-    }
+      // Validate cron time format (5 fields: minute hour day month weekday)
+      if (!cron.validate(cronPattern)) {
+        console.error(
+          `[UserSchedule] Invalid cron format: ${cronPattern} for meal: ${meal.type} (userId: ${userId})`,
+        );
+        return;
+      }
 
-    const schedule = cron.schedule(`${cronTime} * * * *`, async () => {
-      console.log(
-        `[UserSchedule] Checking ${meal.type} reminder for userId: ${userId} at ${new Date().toISOString()}`,
-      );
-      try {
-        const settings = await NotificationSettings.findOne({ userId });
-        if (settings?.nutrition?.mealReminders?.enabled) {
-          await notificationService.sendMealReminder(userId, meal.type);
-          console.log(
-            `[UserSchedule] ${meal.type} reminder sent to userId: ${userId}`,
-          );
-        } else {
-          console.log(
-            `[UserSchedule] Meal reminders disabled in settings for userId: ${userId}`,
+      const schedule = cron.schedule(cronPattern, async () => {
+        console.log(
+          `[UserSchedule] Triggered ${meal.type} reminder for userId: ${userId} at ${new Date().toISOString()}`,
+        );
+        try {
+          const settings = await NotificationSettings.findOne({ userId });
+          if (settings?.nutrition?.mealReminders?.enabled) {
+            const result = await notificationService.sendMealReminder(
+              userId,
+              meal.type,
+            );
+            if (result) {
+              console.log(
+                `[UserSchedule] ${meal.type} reminder sent successfully to userId: ${userId}`,
+              );
+            } else {
+              console.warn(
+                `[UserSchedule] Failed to send ${meal.type} reminder to userId: ${userId}`,
+              );
+            }
+          } else {
+            console.log(
+              `[UserSchedule] Meal reminders disabled in settings for userId: ${userId}`,
+            );
+          }
+        } catch (error) {
+          console.error(
+            `[UserSchedule] Error sending ${meal.type} reminder to userId: ${userId}:`,
+            error,
           );
         }
-      } catch (error) {
-        console.error(
-          `[UserSchedule] Error sending ${meal.type} reminder to userId: ${userId}:`,
-          error,
-        );
-      }
-    });
+      });
 
-    schedules.push(schedule);
-    console.log(
-      `[UserSchedule] Scheduled ${meal.type} at ${cronTime} for userId: ${userId}`,
-    );
+      schedules.push(schedule);
+      console.log(
+        `[UserSchedule] Successfully scheduled ${meal.type} at ${cronTime} (pattern: ${cronPattern}) for userId: ${userId}`,
+      );
+    } catch (scheduleError) {
+      console.error(
+        `[UserSchedule] Error scheduling ${meal.type} for userId: ${userId}:`,
+        scheduleError,
+      );
+    }
   });
 
-  userSchedules.set(userId, schedules);
-  console.log(
-    `[UserSchedule] Total ${schedules.length} meal reminders scheduled for userId: ${userId}`,
-  );
+  if (schedules.length > 0) {
+    userSchedules.set(userId, schedules);
+    console.log(
+      `[UserSchedule] Total ${schedules.length} meal reminders successfully scheduled for userId: ${userId}`,
+    );
+  } else {
+    console.warn(
+      `[UserSchedule] No meal reminders could be scheduled for userId: ${userId}`,
+    );
+  }
 };
 
 /**
@@ -286,7 +352,7 @@ const sendMealReminders = async (mealType) => {
         const user = await User.findById(userId);
         if (user?.mealSchedule?.meals && user.mealSchedule.meals.length > 0) {
           console.info(
-            `[GlobalCron] [${mealType}] User ${userId} has custom schedule, skipping global reminder`,
+            `[GlobalCron] [${mealType}] User ${userId} has custom meal schedule (${user.mealSchedule.meals.length} meals), skipping global reminder`,
           );
           skippedCount++;
           continue;
@@ -295,7 +361,7 @@ const sendMealReminders = async (mealType) => {
         const settings = await NotificationSettings.findOne({ userId });
         if (settings?.nutrition?.mealReminders?.enabled) {
           console.info(
-            `[GlobalCron] [${mealType}] Sending reminder to userId: ${userId}`,
+            `[GlobalCron] [${mealType}] Sending fallback reminder to userId: ${userId}`,
           );
           const result = await notificationService.sendMealReminder(
             userId,
@@ -304,12 +370,12 @@ const sendMealReminders = async (mealType) => {
           if (result) {
             sentCount++;
             console.info(
-              `[GlobalCron] [${mealType}] Reminder sent successfully to userId: ${userId}`,
+              `[GlobalCron] [${mealType}] Fallback reminder sent successfully to userId: ${userId}`,
             );
           } else {
             skippedCount++;
             console.warn(
-              `[GlobalCron] [${mealType}] Failed to send reminder to userId: ${userId}`,
+              `[GlobalCron] [${mealType}] Failed to send fallback reminder to userId: ${userId}`,
             );
           }
         } else {
@@ -327,7 +393,7 @@ const sendMealReminders = async (mealType) => {
       }
     }
     console.info(
-      `[GlobalCron] [${mealType}] Meal reminder broadcast complete. Sent: ${sentCount}, Skipped: ${skippedCount}`,
+      `[GlobalCron] [${mealType}] Fallback meal reminder broadcast complete. Sent: ${sentCount}, Skipped: ${skippedCount}`,
     );
   } catch (err) {
     console.error(
@@ -389,11 +455,16 @@ const sendWaterReminders = async () => {
     for (const tokenDoc of tokens) {
       const userId = tokenDoc.userId;
       try {
-        // Check if user has custom water reminder schedule
+        // Check if user has custom water reminder schedule or custom meal schedule
         const user = await User.findById(userId);
-        if (user?.waterReminderSchedule?.intervalHours) {
+
+        // Skip if user has any custom scheduling
+        if (
+          user?.waterReminderSchedule?.intervalHours ||
+          (user?.mealSchedule?.meals && user.mealSchedule.meals.length > 0)
+        ) {
           console.info(
-            `[GlobalCron] [Water] User ${userId} has custom schedule, skipping global reminder`,
+            `[GlobalCron] [Water] User ${userId} has custom schedule (water: ${!!user?.waterReminderSchedule?.intervalHours}, meals: ${!!(user?.mealSchedule?.meals && user.mealSchedule.meals.length > 0)}), skipping global reminder`,
           );
           skippedCount++;
           continue;
@@ -402,18 +473,18 @@ const sendWaterReminders = async () => {
         const settings = await NotificationSettings.findOne({ userId });
         if (settings?.nutrition?.waterReminders?.enabled) {
           console.info(
-            `[GlobalCron] [Water] Sending reminder to userId: ${userId}`,
+            `[GlobalCron] [Water] Sending fallback reminder to userId: ${userId}`,
           );
           const result = await notificationService.sendWaterReminder(userId);
           if (result) {
             sentCount++;
             console.info(
-              `[GlobalCron] [Water] Reminder sent successfully to userId: ${userId}`,
+              `[GlobalCron] [Water] Fallback reminder sent successfully to userId: ${userId}`,
             );
           } else {
             skippedCount++;
             console.warn(
-              `[GlobalCron] [Water] Failed to send reminder to userId: ${userId}`,
+              `[GlobalCron] [Water] Failed to send fallback reminder to userId: ${userId}`,
             );
           }
         } else {
@@ -431,7 +502,7 @@ const sendWaterReminders = async () => {
       }
     }
     console.info(
-      `[GlobalCron] [Water] Water reminder broadcast complete. Sent: ${sentCount}, Skipped: ${skippedCount}`,
+      `[GlobalCron] [Water] Fallback water reminder broadcast complete. Sent: ${sentCount}, Skipped: ${skippedCount}`,
     );
   } catch (err) {
     console.error(
@@ -495,13 +566,10 @@ router.post("/register-token", async (req, res) => {
  *     meals: [{
  *       id: number,
  *       type: string,
- *       time: ISO string or Date,
- *       enabled: boolean
+ *       time: ISO string or Date
  *     }],
  *     preferences: {
- *       reminders: boolean,
  *       reminderTime: number,
- *       waterReminders: boolean,
  *       weekendSchedule: boolean
  *     }
  *   }
@@ -561,6 +629,31 @@ router.post("/meal-schedule", async (req, res) => {
         message: "Each meal must have type and time properties",
         invalidMeals: invalidMeals,
       });
+    }
+
+    // Remove any enabled fields from meals since they're handled by NotificationSettings
+    if (mealSchedule.meals) {
+      mealSchedule.meals = mealSchedule.meals.map((meal) => {
+        const { enabled, ...cleanMeal } = meal;
+        if (enabled !== undefined) {
+          console.log(
+            `[meal-schedule POST] Removing enabled field from meal ${meal.type}, use NotificationSettings instead`,
+          );
+        }
+        return cleanMeal;
+      });
+    }
+
+    // Remove conflicting enable states from preferences since they're handled by NotificationSettings
+    if (mealSchedule.preferences) {
+      const { reminders, waterReminders, ...cleanPreferences } =
+        mealSchedule.preferences;
+      if (reminders !== undefined || waterReminders !== undefined) {
+        console.log(
+          `[meal-schedule POST] Removing reminders/waterReminders from preferences, use NotificationSettings instead`,
+        );
+      }
+      mealSchedule.preferences = cleanPreferences;
     }
 
     console.log(
@@ -654,8 +747,8 @@ router.get("/meal-schedule", async (req, res) => {
     res.json({
       success: true,
       data: {
-        ...(user.mealSchedule?.toObject?.() ||
-          user.mealSchedule || { meals: [], preferences: {} }),
+        mealSchedule: user.mealSchedule?.toObject?.() ||
+          user.mealSchedule || { meals: [], preferences: {} },
         notificationSettings: {
           mealReminders:
             notificationSettings.nutrition?.mealReminders?.enabled ?? true,

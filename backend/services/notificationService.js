@@ -21,28 +21,68 @@ class NotificationService {
         `[sendNotification] Called for userId: ${userId}, type: ${type}, category: ${category}`,
       );
       // Get user's notification settings
-      const settings = await NotificationSettings.findOne({ userId });
+      let settings = await NotificationSettings.findOne({ userId });
       console.log(
         `[sendNotification] Notification settings for userId ${userId}:`,
         JSON.stringify(settings),
       );
+
+      // Create default settings if they don't exist
       if (!settings) {
         console.log(
-          "[sendNotification] No notification settings found for user:",
+          "[sendNotification] No notification settings found, creating defaults for user:",
           userId,
         );
-        return false;
+        try {
+          settings = await NotificationSettings.create({
+            userId,
+            nutrition: {
+              mealReminders: { enabled: true },
+              waterReminders: { enabled: true },
+              snackAlerts: { enabled: false },
+            },
+            health: {
+              weightTracking: { enabled: true },
+              exerciseReminders: { enabled: true },
+              sleepSchedule: { enabled: false },
+            },
+            achievements: {
+              milestones: { enabled: true },
+              weeklyReport: { enabled: true },
+              streaks: { enabled: true },
+            },
+            social: {
+              chat: { enabled: true },
+            },
+          });
+          console.log(
+            `[sendNotification] Created default settings for userId: ${userId}`,
+          );
+        } catch (createError) {
+          console.error(
+            `[sendNotification] Error creating default settings for userId: ${userId}:`,
+            createError,
+          );
+          return false;
+        }
       }
 
       // Check if this type of notification is enabled
       const [mainCategory, subCategory] = type.split(".");
-      if (!settings[mainCategory]?.[subCategory]?.enabled) {
+
+      // Safely check nested properties
+      const isEnabled = settings[mainCategory]?.[subCategory]?.enabled;
+
+      if (!isEnabled) {
         console.log(
-          `[sendNotification] Notifications of type ${type} are disabled for user:`,
-          userId,
+          `[sendNotification] Notifications of type ${type} are disabled for user: ${userId} (${mainCategory}.${subCategory}.enabled = ${isEnabled})`,
         );
         return false;
       }
+
+      console.log(
+        `[sendNotification] Notifications of type ${type} are enabled for user: ${userId}`,
+      );
 
       // Get user's FCM token
       const userToken = await UserToken.findOne({ userId });
@@ -136,6 +176,16 @@ class NotificationService {
       return false;
     }
 
+    // Sanitize mealType for security (early validation)
+    const sanitizedMealType = mealType.substring(0, 50).trim();
+    if (!sanitizedMealType) {
+      console.error(
+        "[sendMealReminder] mealType is empty after sanitization:",
+        mealType,
+      );
+      return false;
+    }
+
     // Comprehensive meal type messages with emojis
     const messages = {
       Breakfast: {
@@ -181,9 +231,6 @@ class NotificationService {
     };
 
     // Get the message for this meal type or create a custom one
-    // Sanitize mealType for security
-    const sanitizedMealType = mealType.substring(0, 50).trim();
-
     const message = messages[sanitizedMealType] || {
       title: `⏰ Time for ${sanitizedMealType}!`,
       body: `Your ${sanitizedMealType.toLowerCase()} is scheduled now. Don't forget to log your meal!`,
@@ -203,6 +250,12 @@ class NotificationService {
   }
 
   async sendWaterReminder(userId) {
+    // Validate input
+    if (!userId) {
+      console.error("[sendWaterReminder] userId is required");
+      return false;
+    }
+
     console.log(`[sendWaterReminder] Called for userId: ${userId}`);
     const result = await this.sendNotification(
       userId,
