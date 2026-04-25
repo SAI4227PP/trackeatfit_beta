@@ -221,8 +221,8 @@ const userSchema = new mongoose.Schema({
     meals: [
       {
         id: { type: Number },
-        type: { type: String },
-        time: { type: Date },
+        type: { type: String, required: true },
+        time: { type: mongoose.Schema.Types.Mixed }, // Accept Date or String for flexibility
       },
     ],
     preferences: {
@@ -231,11 +231,11 @@ const userSchema = new mongoose.Schema({
     },
   },
 
-  // Water reminder schedule (interval in hours)
+  // Water reminder schedule (interval in hours with time range)
   waterReminderSchedule: {
     intervalHours: { type: Number, default: 2, min: 1, max: 12 },
-    startTime: { type: String, default: "08:00" }, // HH:MM format
-    endTime: { type: String, default: "22:00" }, // HH:MM format
+    startTime: { type: mongoose.Schema.Types.Mixed, default: "08:00" }, // Accept Date or String (HH:MM format)
+    endTime: { type: mongoose.Schema.Types.Mixed, default: "22:00" }, // Accept Date or String (HH:MM format)
   },
 });
 

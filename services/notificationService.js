@@ -1,4 +1,3 @@
-import notifee from "@notifee/react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { registerForPushNotifications } from "../utils/notificationUtils";
 
@@ -97,6 +96,10 @@ export const refreshFCMToken = async () => {
 // Function to cancel all scheduled notifications
 export const cancelAllScheduledNotifications = async () => {
   try {
+    const module = require("@notifee/react-native");
+    const notifee = module?.default;
+    if (!notifee) return false;
+
     await notifee.cancelAllNotifications();
     return true;
   } catch (error) {

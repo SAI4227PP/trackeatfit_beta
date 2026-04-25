@@ -1,12 +1,21 @@
-import notifee, {
-  AndroidImportance,
-  AndroidVisibility,
-} from "@notifee/react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { PermissionsAndroid, Platform } from "react-native";
 
 // Add logging utility
 const NOTIFICATION_LOGS_KEY = "userNotifications";
+
+const getNotifeeContext = () => {
+  try {
+    const module = require("@notifee/react-native");
+    return {
+      notifee: module?.default,
+      AndroidImportance: module?.AndroidImportance,
+      AndroidVisibility: module?.AndroidVisibility,
+    };
+  } catch {
+    return null;
+  }
+};
 
 const logEvent = async (event, details) => {
   const timestamp = new Date().toISOString();
@@ -74,55 +83,61 @@ export const storeNotification = async (notification) => {
 // Configure notification channels (Android)
 const configureChannels = async () => {
   if (Platform.OS === "android") {
-    await notifee.createChannel({
+    const context = getNotifeeContext();
+    if (!context?.notifee) {
+      await logEvent("NOTIFEE_UNAVAILABLE", { context: "configureChannels" });
+      return;
+    }
+
+    await context.notifee.createChannel({
       id: "default",
       name: "Default",
-      importance: AndroidImportance.HIGH,
+      importance: context.AndroidImportance?.HIGH,
       vibration: true,
       vibrationPattern: [300, 500], // even number, positive values
       lights: true,
       lightColor: "#FF231F7C",
-      visibility: AndroidVisibility.PUBLIC,
+      visibility: context.AndroidVisibility?.PUBLIC,
     });
-    await notifee.createChannel({
+    await context.notifee.createChannel({
       id: "meal_reminder",
       name: "Meal Reminders",
-      importance: AndroidImportance.HIGH,
+      importance: context.AndroidImportance?.HIGH,
       vibration: true,
       vibrationPattern: [300, 500], // even number, positive values
       lights: true,
       lightColor: "#2563eb",
-      visibility: AndroidVisibility.PUBLIC,
+      visibility: context.AndroidVisibility?.PUBLIC,
     });
-    await notifee.createChannel({
+    await context.notifee.createChannel({
       id: "achievement",
       name: "Achievements",
-      importance: AndroidImportance.HIGH,
+      importance: context.AndroidImportance?.HIGH,
       vibration: true,
       vibrationPattern: [500, 110, 500, 110], // even number, positive values
       lights: true,
       lightColor: "#FFD700",
-      visibility: AndroidVisibility.PUBLIC,
+      visibility: context.AndroidVisibility?.PUBLIC,
     });
-    await notifee.createChannel({
+    await context.notifee.createChannel({
       id: "chat",
       name: "Chat Messages",
-      importance: AndroidImportance.HIGH,
+      importance: context.AndroidImportance?.HIGH,
       vibration: true,
       vibrationPattern: [300, 500], // even number, positive values
       lights: true,
       lightColor: "#2563eb",
-      visibility: AndroidVisibility.PUBLIC,
+      visibility: context.AndroidVisibility?.PUBLIC,
     });
-    await notifee.createChannel({
+    await context.notifee.createChannel({
       id: "water_reminder",
       name: "Water Reminders",
-      importance: AndroidImportance.HIGH,
+      importance: context.AndroidImportance?.HIGH,
       vibration: true,
       vibrationPattern: [300, 500], // even number, positive values
       lights: true,
       lightColor: "#2563eb",
-      visibility: AndroidVisibility.PUBLIC,
+      visibility: context.AndroidVisibility?.PUBLIC,
     });
     await logEvent("ANDROID_CHANNELS_CREATED", {});
   }
@@ -350,7 +365,13 @@ export const displayLocalNotification = async ({
   androidChannelId = "default",
 }) => {
   try {
-    await notifee.displayNotification({
+    const context = getNotifeeContext();
+    if (!context?.notifee) {
+      await logEvent("NOTIFEE_UNAVAILABLE", { context: "displayLocalNotification" });
+      return;
+    }
+
+    await context.notifee.displayNotification({
       title,
       body,
       data,

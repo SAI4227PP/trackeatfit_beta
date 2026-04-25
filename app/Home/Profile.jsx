@@ -59,23 +59,13 @@ const ProfileOption = ({
           onPress={onPress}
           onPressIn={handlePressIn}
           onPressOut={handlePressOut}
-          style={{
-            flexDirection: "row",
-            justifyContent: "space-between",
-            alignItems: "center",
-            paddingVertical: 16,
-          }}
+          className="flex-row justify-between items-center py-4"
         >
-          <View style={{ flexDirection: "row", alignItems: "center" }}>
+          <View className="flex-row items-center">
             <View
-              style={{
-                width: 32,
-                height: 32,
-                borderRadius: 16,
-                backgroundColor: isDarkMode ? "#1f2937" : "#f9fafb",
-                alignItems: "center",
-                justifyContent: "center",
-              }}
+              className={`w-8 h-8 rounded-2xl items-center justify-center ${
+                isDarkMode ? "bg-gray-800" : "bg-gray-50"
+              }`}
             >
               {iconFamily === "MaterialCommunity" ? (
                 <MaterialCommunityIcons
@@ -92,12 +82,9 @@ const ProfileOption = ({
               )}
             </View>
             <Text
-              style={{
-                fontWeight: "500",
-                fontSize: 16,
-                marginLeft: 12,
-                color: isDarkMode ? "#e5e7eb" : "#374151",
-              }}
+              className={`font-medium text-base ml-3 ${
+                isDarkMode ? "text-gray-200" : "text-gray-700"
+              }`}
             >
               {title}
             </Text>
@@ -107,10 +94,7 @@ const ProfileOption = ({
       </Animated.View>
       {showBorder && (
         <View
-          style={{
-            height: 1,
-            backgroundColor: isDarkMode ? "#374151" : "#f3f4f6",
-          }}
+          className={`h-px ${isDarkMode ? "bg-gray-700" : "bg-gray-100"}`}
         />
       )}
     </>
@@ -121,50 +105,28 @@ const StatsCard = ({ title, value, unit, icon, color }) => {
   const { isDarkMode } = useTheme();
   return (
     <View
-      style={{
-        backgroundColor: isDarkMode ? "#1f2937" : "#ffffff",
-        borderRadius: 12,
-        padding: 16,
-        shadowColor: "#000",
-        shadowOffset: { width: 0, height: 1 },
-        shadowOpacity: 0.05,
-        shadowRadius: 2,
-        elevation: 2,
-        flex: 1,
-        marginHorizontal: 4,
-      }}
+      className={`rounded-xl p-4 flex-1 mx-1 shadow-sm ${
+        isDarkMode ? "bg-gray-800" : "bg-white"
+      }`}
     >
-      <View
-        style={{
-          flexDirection: "row",
-          alignItems: "center",
-          justifyContent: "space-between",
-        }}
-      >
+      <View className="flex-row items-center justify-between">
         <Text
-          style={{
-            fontWeight: "500",
-            fontSize: 14,
-            color: isDarkMode ? "#d1d5db" : "#4b5563",
-          }}
+          className={`font-medium text-sm ${
+            isDarkMode ? "text-gray-300" : "text-gray-600"
+          }`}
         >
           {title}
         </Text>
         <View
-          style={{
-            width: 32,
-            height: 32,
-            borderRadius: 16,
-            alignItems: "center",
-            justifyContent: "center",
-            backgroundColor: isDarkMode
+          className={`w-8 h-8 rounded-2xl items-center justify-center ${
+            isDarkMode
               ? color === "emerald"
-                ? "#065f46"
-                : "#1e40af"
+                ? "bg-emerald-800"
+                : "bg-blue-800"
               : color === "emerald"
-                ? "#d1fae5"
-                : "#dbeafe",
-          }}
+                ? "bg-emerald-100"
+                : "bg-blue-100"
+          }`}
         >
           <MaterialCommunityIcons
             name={icon}
@@ -181,27 +143,16 @@ const StatsCard = ({ title, value, unit, icon, color }) => {
           />
         </View>
       </View>
-      <View
-        style={{
-          flexDirection: "row",
-          alignItems: "baseline",
-          marginTop: 8,
-        }}
-      >
+      <View className="flex-row items-baseline mt-2">
         <Text
-          style={{
-            fontSize: 24,
-            fontWeight: "bold",
-            color: isDarkMode ? "#ffffff" : "#111827",
-          }}
+          className={`text-2xl font-bold ${
+            isDarkMode ? "text-white" : "text-gray-900"
+          }`}
         >
           {value}
         </Text>
         <Text
-          style={{
-            marginLeft: 4,
-            color: isDarkMode ? "#9ca3af" : "#6b7280",
-          }}
+          className={`ml-1 ${isDarkMode ? "text-gray-400" : "text-gray-500"}`}
         >
           {unit}
         </Text>
@@ -357,50 +308,19 @@ const Profile = () => {
 
   const LoadingOverlay = () => (
     <Modal transparent visible={showLogoutAnimation}>
-      <View
-        style={{
-          flex: 1,
-          justifyContent: "center",
-          alignItems: "center",
-          backgroundColor: "rgba(0,0,0,0.3)",
-        }}
-      >
+      <View className="flex-1 justify-center items-center bg-black/30">
         <LinearGradient
           colors={["rgba(255,255,255,0.95)", "rgba(255,255,255,0.98)"]}
-          style={{
-            padding: 24,
-            borderRadius: 16,
-            alignItems: "center",
-            shadowColor: "#000",
-            shadowOffset: { width: 0, height: 4 },
-            shadowOpacity: 0.15,
-            shadowRadius: 8,
-            width: "80%",
-            maxWidth: 400,
-          }}
+          className="p-6 rounded-2xl items-center shadow-lg w-4/5 max-w-sm"
         >
           <ActivityIndicator size="large" color="#15803d" />
-          <Text
-            style={{
-              marginTop: 16,
-              fontSize: 18,
-              fontWeight: "600",
-              color: "#111827",
-            }}
-          >
+          <Text className="mt-4 text-lg font-semibold text-gray-900">
             Signing Out
           </Text>
-          <Text
-            style={{
-              marginTop: 8,
-              fontSize: 14,
-              color: "#6b7280",
-              textAlign: "center",
-            }}
-          >
+          <Text className="mt-2 text-sm text-gray-500 text-center">
             {clearingMessage}
           </Text>
-          <View style={{ marginTop: 16 }}>
+          <View className="mt-4">
             <Progress.Bar
               progress={clearingProgress}
               width={200}
@@ -450,6 +370,46 @@ const Profile = () => {
       10: "master",
     };
     return t(`profile.status.${statusMap[level] || "novice"}`);
+  };
+
+  // Add subscription utility functions
+  const getSubscriptionPlan = () => {
+    if (!user?.subscriptions || user.subscriptions.length === 0) {
+      return "FREE";
+    }
+    return user.subscriptions[0].plan || "FREE";
+  };
+
+  const getSubscriptionDisplay = (plan) => {
+    switch (plan) {
+      case "PREMIUM":
+        return {
+          name: "Premium Member",
+          icon: "crown",
+          colors: ["#f59e0b", "#d97706"],
+          textColor: "#92400e",
+        };
+      case "BASIC":
+        return {
+          name: "Basic Member",
+          icon: "star",
+          colors: ["#3b82f6", "#2563eb"],
+          textColor: "#1d4ed8",
+        };
+      case "FREE":
+      default:
+        return {
+          name: "Free Member",
+          icon: "account",
+          colors: ["#6b7280", "#4b5563"],
+          textColor: "#374151",
+        };
+    }
+  };
+
+  const getXPProgress = () => {
+    if (!user?.xp || !user?.nextLevelXP) return 0;
+    return (user.xp / user.nextLevelXP) * 100;
   };
 
   const nutritionStats = [
@@ -581,137 +541,88 @@ const Profile = () => {
 
   // Add Achievement Card component
   const AchievementCard = memo(({ title, description, icon, isUnlocked }) => (
-    <LinearGradient
-      colors={
-        isUnlocked
-          ? isDarkMode
-            ? ["#1e293b", "#065f46"]
-            : ["#f0fdf4", "#bbf7d0"]
-          : isDarkMode
-            ? ["#1e293b", "#334155"]
-            : ["#f8fafc", "#e5e7eb"]
-      }
-      start={{ x: 0, y: 0 }}
-      end={{ x: 1, y: 1 }}
-      style={{
-        marginRight: 12,
-        borderRadius: 16,
-        padding: 14,
-        shadowColor: isDarkMode ? "#000" : "#0000001a",
-        shadowOffset: { width: 0, height: 3 },
-        shadowOpacity: 0.13,
-        shadowRadius: 5,
-        elevation: 4,
-        borderWidth: isUnlocked ? 1.2 : 1,
-        borderColor: isUnlocked
-          ? isDarkMode
-            ? "#34d399"
-            : "#059669"
-          : isDarkMode
-            ? "#334155"
-            : "#e5e7eb",
-      }}
+    <View
+      className={`mr-3 rounded-xl p-3 min-w-[160px] shadow-sm ${
+        isDarkMode ? "bg-gray-800" : "bg-white"
+      }`}
     >
-      <View
-        style={{
-          width: 44,
-          height: 44,
-          borderRadius: 12,
-          alignItems: "center",
-          justifyContent: "center",
-          marginBottom: 8,
-          backgroundColor: isUnlocked
-            ? isDarkMode
-              ? "#065f46"
-              : "#bbf7d0"
-            : isDarkMode
-              ? "#334155"
-              : "#e5e7eb",
-        }}
-      >
-        <MaterialCommunityIcons
-          name={icon}
-          size={24}
-          color={
+      <View className="items-center">
+        <View
+          className={`w-12 h-12 rounded-xl items-center justify-center mb-3 ${
             isUnlocked
               ? isDarkMode
-                ? "#34d399"
-                : "#059669"
+                ? "bg-emerald-800"
+                : "bg-emerald-100"
               : isDarkMode
-                ? "#64748b"
-                : "#a3a3a3"
-          }
-        />
+                ? "bg-gray-700"
+                : "bg-gray-100"
+          }`}
+        >
+          <MaterialCommunityIcons
+            name={icon}
+            size={24}
+            color={
+              isUnlocked
+                ? isDarkMode
+                  ? "#34d399"
+                  : "#047857"
+                : isDarkMode
+                  ? "#6b7280"
+                  : "#9ca3af"
+            }
+          />
+        </View>
+
+        <Text
+          className={`text-sm font-semibold mb-1 text-center ${
+            isUnlocked
+              ? isDarkMode
+                ? "text-white"
+                : "text-gray-900"
+              : isDarkMode
+                ? "text-gray-400"
+                : "text-gray-500"
+          }`}
+          numberOfLines={2}
+        >
+          {title}
+        </Text>
+
+        <View
+          className={`px-2 py-1 rounded-full ${
+            isUnlocked ? "bg-emerald-100" : "bg-gray-100"
+          }`}
+        >
+          <Text
+            className={`text-xs font-medium ${
+              isUnlocked ? "text-emerald-600" : "text-gray-500"
+            }`}
+          >
+            {isUnlocked ? "Unlocked" : "Locked"}
+          </Text>
+        </View>
       </View>
-      <Text
-        style={{
-          fontSize: 16,
-          fontWeight: "700",
-          color: isUnlocked
-            ? isDarkMode
-              ? "#34d399"
-              : "#059669"
-            : isDarkMode
-              ? "#cbd5e1"
-              : "#64748b",
-          marginBottom: 4,
-          letterSpacing: 0.1,
-        }}
-        numberOfLines={1}
-      >
-        {title}
-      </Text>
-      <Text
-        style={{
-          fontSize: 13,
-          fontWeight: "400",
-          color: isDarkMode ? "#94a3b8" : "#64748b",
-          lineHeight: 18,
-        }}
-        numberOfLines={2}
-      >
-        {description}
-      </Text>
-    </LinearGradient>
+    </View>
   ));
 
   const renderAchievementsSection = () => (
-    <View style={{ marginBottom: 24 }}>
-      <View
-        style={{
-          flexDirection: "row",
-          justifyContent: "space-between",
-          alignItems: "center",
-          marginBottom: 16,
-          paddingHorizontal: 16,
-        }}
-      >
+    <View className="mb-6">
+      <View className="flex-row justify-between items-center mb-4 px-4">
         <Text
-          style={{
-            fontSize: 20,
-            fontWeight: "bold",
-            color: isDarkMode ? "#e5e7eb" : "#111827",
-          }}
+          className={`text-lg font-bold ${
+            isDarkMode ? "text-gray-200" : "text-gray-900"
+          }`}
         >
           {t("profile.achievements")}
         </Text>
         <TouchableOpacity
           onPress={() => navigation.navigate("Home/Achievements")}
-          style={{
-            flexDirection: "row",
-            alignItems: "center",
-            backgroundColor: isDarkMode ? "#065f46" : "#f0fdf4",
-            paddingHorizontal: 16,
-            paddingVertical: 8,
-            borderRadius: 9999,
-          }}
+          className="flex-row items-center"
         >
           <Text
-            style={{
-              fontWeight: "500",
-              color: isDarkMode ? "#34d399" : "#059669",
-              marginRight: 4,
-            }}
+            className={`font-medium text-sm mr-1 ${
+              isDarkMode ? "text-emerald-400" : "text-emerald-600"
+            }`}
           >
             {t("profile.seeAll")}
           </Text>
@@ -726,12 +637,22 @@ const Profile = () => {
       <ScrollView
         horizontal
         showsHorizontalScrollIndicator={false}
-        style={{ paddingLeft: 16 }}
+        className="px-4"
+        contentContainerStyle={{ paddingRight: 16 }}
       >
         {isInitialLoading ? (
           Array(3)
             .fill(0)
-            .map((_, index) => <AchievementSkeleton key={index} />)
+            .map((_, index) => (
+              <View
+                key={index}
+                className={`mr-3 rounded-xl h-32 w-40 ${
+                  isDarkMode ? "bg-gray-700" : "bg-gray-100"
+                }`}
+              >
+                <AchievementSkeleton />
+              </View>
+            ))
         ) : (
           <>
             {achievements
@@ -740,39 +661,39 @@ const Profile = () => {
               .map((achievement) => (
                 <AchievementCard key={achievement.title} {...achievement} />
               ))}
+
             {achievements.filter((a) => a.isUnlocked).length === 0 && (
-              <LinearGradient
-                colors={
-                  isDarkMode
-                    ? ["#1f293730", "#1f293750"]
-                    : ["#f8fafc", "#f1f5f9"]
-                }
-                style={{
-                  alignItems: "center",
-                  justifyContent: "center",
-                  paddingVertical: 32,
-                  paddingHorizontal: 16,
-                  borderRadius: 16,
-                  width: 200,
-                }}
+              <View
+                className={`rounded-xl p-6 items-center justify-center min-w-[200px] ${
+                  isDarkMode ? "bg-gray-800" : "bg-gray-50"
+                }`}
               >
-                <MaterialCommunityIcons
-                  name="trophy-outline"
-                  size={40}
-                  color={isDarkMode ? "#4b5563" : "#9ca3af"}
-                />
+                <View
+                  className={`w-12 h-12 rounded-xl items-center justify-center mb-3 ${
+                    isDarkMode ? "bg-gray-700" : "bg-gray-200"
+                  }`}
+                >
+                  <MaterialCommunityIcons
+                    name="trophy-outline"
+                    size={24}
+                    color={isDarkMode ? "#6b7280" : "#9ca3af"}
+                  />
+                </View>
                 <Text
-                  style={{
-                    color: isDarkMode ? "#cbd5e1" : "#64748b",
-                    fontSize: 16,
-                    marginTop: 8,
-                    textAlign: "center",
-                    fontWeight: "500",
-                  }}
+                  className={`text-sm font-medium text-center mb-2 ${
+                    isDarkMode ? "text-gray-300" : "text-gray-600"
+                  }`}
                 >
                   {t("profile.noAchievements")}
                 </Text>
-              </LinearGradient>
+                <Text
+                  className={`text-xs text-center ${
+                    isDarkMode ? "text-gray-400" : "text-gray-500"
+                  }`}
+                >
+                  Complete goals to unlock
+                </Text>
+              </View>
             )}
           </>
         )}
@@ -812,10 +733,7 @@ const Profile = () => {
 
   return (
     <SafeAreaView
-      style={{
-        flex: 1,
-        backgroundColor: isDarkMode ? "#111827" : "#ffffff",
-      }}
+      className={`flex-1 ${isDarkMode ? "bg-gray-900" : "bg-white"}`}
     >
       <LoadingOverlay />
       <LogoutDialog
@@ -825,29 +743,15 @@ const Profile = () => {
       />
       <LinearGradient
         colors={isDarkMode ? ["#1f2937", "#111827"] : ["#ffffff", "#f8fafc"]}
-        style={{ flex: 1 }}
+        className="flex-1"
       >
         <View
-          style={{
-            paddingHorizontal: 16,
-            paddingVertical: 16,
-            borderBottomWidth: 1,
-            borderColor: isDarkMode ? "#374151" : "#f3f4f6",
-          }}
+          className={`px-4 py-4 border-b ${
+            isDarkMode ? "border-gray-700" : "border-gray-100"
+          }`}
         >
-          <View
-            style={{
-              flexDirection: "row",
-              alignItems: "center",
-            }}
-          >
-            <TouchableOpacity
-              onPress={handleBack}
-              style={{
-                padding: 8,
-                marginLeft: -8,
-              }}
-            >
+          <View className="flex-row items-center">
+            <TouchableOpacity onPress={handleBack} className="p-2 -ml-2">
               <Icon
                 name="chevron-back"
                 size={24}
@@ -855,141 +759,70 @@ const Profile = () => {
               />
             </TouchableOpacity>
             <Text
-              style={{
-                fontSize: 20,
-                fontWeight: "bold",
-                marginLeft: 8,
-                color: isDarkMode ? "#e5e7eb" : "#374151",
-              }}
+              className={`text-xl font-bold ml-2 ${
+                isDarkMode ? "text-gray-200" : "text-gray-700"
+              }`}
             >
               {t("profile.title")}
             </Text>
           </View>
         </View>
 
-        <View style={{ flex: 1 }}>
+        <View className="flex-1">
           <ScrollView
             showsVerticalScrollIndicator={false}
             contentContainerStyle={{ paddingBottom: 20 }}
           >
-            <View style={{ paddingHorizontal: 16, paddingTop: 24 }}>
+            <View className="px-4 pt-6">
               {/* Profile Header */}
-              <View
-                style={{
-                  alignItems: "center",
-                  marginBottom: 32,
-                }}
-              >
-                <View
-                  style={{
-                    position: "relative",
-                  }}
-                >
+              <View className="items-center mb-8">
+                <View className="relative">
                   <TouchableOpacity
                     onPress={() => router.push("/Community/EditProfile")}
                   >
-                    <View
-                      style={{
-                        width: 96,
-                        height: 96,
-                        borderRadius: 48,
-                        borderWidth: 4,
-                        borderColor: "#ffffff",
-                        shadowColor: "#000",
-                        shadowOffset: { width: 0, height: 4 },
-                        shadowOpacity: 0.2,
-                        shadowRadius: 8,
-                        overflow: "hidden",
-                      }}
-                    >
+                    <View className="w-24 h-24 rounded-full border-4 border-white shadow-lg overflow-hidden">
                       <Image
                         source={{
                           uri:
                             user?.avatar ||
                             "https://example.com/default-avatar.png",
                         }}
-                        style={{
-                          width: "100%",
-                          height: "100%",
-                          borderRadius: 48,
-                        }}
+                        className="w-full h-full rounded-full"
                         resizeMode="cover"
                       />
                     </View>
-                    <View
-                      style={{
-                        position: "absolute",
-                        bottom: 0,
-                        right: 0,
-                        backgroundColor: "#ffffff",
-                        padding: 4,
-                        borderRadius: 9999,
-                        shadowColor: "#000",
-                        shadowOffset: { width: 0, height: 2 },
-                        shadowOpacity: 0.2,
-                        shadowRadius: 4,
-                      }}
-                    >
+                    <View className="absolute bottom-0 right-0 bg-white p-1 rounded-full shadow-md">
                       <Icon name="camera" size={18} color="#15803d" />
                     </View>
                   </TouchableOpacity>
                 </View>
 
-                <View
-                  style={{
-                    marginTop: 16,
-                    alignItems: "center",
-                  }}
-                >
+                <View className="mt-4 items-center">
                   <Text
-                    style={{
-                      fontSize: 24,
-                      fontWeight: "bold",
-                      color: isDarkMode ? "#e5e7eb" : "#111827",
-                    }}
+                    className={`text-2xl font-bold ${
+                      isDarkMode ? "text-gray-200" : "text-gray-900"
+                    }`}
                   >
                     {user?.username || t("profile.guest")}
                   </Text>
-
                   {/* Add Level and Status display */}
                   {user?.level && (
-                    <View
-                      style={{
-                        flexDirection: "row",
-                        alignItems: "center",
-                        marginTop: 8,
-                      }}
-                    >
-                      <View
-                        style={{
-                          backgroundColor: "#f59e0b",
-                          paddingHorizontal: 12,
-                          paddingVertical: 4,
-                          borderRadius: 9999,
-                          marginRight: 8,
-                        }}
-                      >
-                        <Text
-                          style={{
-                            color: "#111827",
-                            fontWeight: "600",
-                          }}
-                        >
+                    <View className="flex-row items-center mt-2">
+                      <View className="bg-amber-500 px-3 py-1 rounded-full mr-2 border-2 border-white">
+                        <Text className="text-gray-900 font-semibold">
                           {t("profile.level")} {user.level}
                         </Text>
                       </View>
                       <View
+                        className="px-3 py-1 rounded-full border-2 border-white"
                         style={{
-                          paddingHorizontal: 12,
-                          paddingVertical: 4,
-                          borderRadius: 9999,
                           backgroundColor: `${getLevelStatus(user.level).color}20`,
                         }}
                       >
                         <Text
+                          className="font-semibold"
                           style={{
                             color: getLevelStatus(user.level).color,
-                            fontWeight: "600",
                           }}
                         >
                           {getStatusTranslation(user.level)}
@@ -997,77 +830,60 @@ const Profile = () => {
                       </View>
                     </View>
                   )}
-
                   <Text
-                    style={{
-                      fontSize: 14,
-                      fontWeight: "500",
-                      marginTop: 8,
-                      color: isDarkMode ? "#9ca3af" : "#6b7280",
-                    }}
+                    className={`text-sm font-medium mt-2 ${
+                      isDarkMode ? "text-gray-400" : "text-gray-500"
+                    }`}
                   >
                     {formatMemberSince(user?.createdAt)}
                   </Text>
                 </View>
 
-                {/* Premium Badge */}
-                <View
-                  style={{
-                    flexDirection: "row",
-                    alignItems: "center",
-                    marginTop: 16,
-                    backgroundColor: "#f59e0b",
-                    paddingHorizontal: 12,
-                    paddingVertical: 6,
-                    borderRadius: 9999,
-                  }}
-                >
-                  <MaterialCommunityIcons
-                    name="crown"
-                    size={16}
-                    color="#b45309"
-                  />
-                  <Text
+                {/* Membership Badge */}
+                <View className="mt-4">
+                  <View
+                    className="px-3 py-1 rounded-full border-2 border-white"
                     style={{
-                      color: "#111827",
-                      fontWeight: "500",
-                      fontSize: 14,
-                      marginLeft: 4,
+                      backgroundColor: `${getSubscriptionDisplay(getSubscriptionPlan()).colors[0]}20`,
                     }}
                   >
-                    Premium Member
-                  </Text>
+                    <View className="flex-row items-center">
+                      <MaterialCommunityIcons
+                        name={
+                          getSubscriptionDisplay(getSubscriptionPlan()).icon
+                        }
+                        size={16}
+                        color={
+                          getSubscriptionDisplay(getSubscriptionPlan())
+                            .colors[0]
+                        }
+                      />
+                      <Text
+                        className="font-semibold text-sm ml-1.5"
+                        style={{
+                          color: getSubscriptionDisplay(getSubscriptionPlan())
+                            .colors[0],
+                        }}
+                      >
+                        {getSubscriptionDisplay(getSubscriptionPlan()).name}
+                      </Text>
+                    </View>
+                  </View>
                 </View>
               </View>
 
               {/* Quick Stats Grid */}
-              <View
-                style={{
-                  marginBottom: 24,
-                }}
-              >
+              <View className="mb-6">
                 <Text
-                  style={{
-                    fontSize: 18,
-                    fontWeight: "bold",
-                    marginBottom: 16,
-                    color: isDarkMode ? "#e5e7eb" : "#111827",
-                  }}
+                  className={`text-lg font-bold mb-4 ${
+                    isDarkMode ? "text-gray-200" : "text-gray-900"
+                  }`}
                 >
                   {t("profile.nutritionOverview")}
                 </Text>
-                <View
-                  style={{
-                    flexDirection: "row",
-                    flexWrap: "wrap",
-                    justifyContent: "space-between",
-                  }}
-                >
+                <View className="flex-row flex-wrap justify-between">
                   {nutritionStats.map((stat, index) => (
-                    <View
-                      key={index}
-                      style={{ width: "48%", paddingBottom: 16 }}
-                    >
+                    <View key={index} className="w-[48%] pb-4">
                       <StatsCard {...stat} />
                     </View>
                   ))}
@@ -1079,24 +895,14 @@ const Profile = () => {
 
               {/* Health Goals */}
               <View
-                style={{
-                  backgroundColor: isDarkMode ? "#1f2937" : "#ffffff",
-                  borderRadius: 16,
-                  shadowColor: "#000",
-                  shadowOffset: { width: 0, height: 2 },
-                  shadowOpacity: 0.1,
-                  shadowRadius: 4,
-                  marginBottom: 24,
-                  padding: 16,
-                }}
+                className={`rounded-2xl shadow-sm mb-6 p-4 ${
+                  isDarkMode ? "bg-gray-800" : "bg-white"
+                }`}
               >
                 <Text
-                  style={{
-                    fontSize: 14,
-                    fontWeight: "600",
-                    marginBottom: 12,
-                    color: isDarkMode ? "#e5e7eb" : "#111827",
-                  }}
+                  className={`text-sm font-semibold mb-3 ${
+                    isDarkMode ? "text-gray-200" : "text-gray-900"
+                  }`}
                 >
                   {t("profile.sections.healthGoals")}
                 </Text>
@@ -1128,24 +934,14 @@ const Profile = () => {
 
               {/* Account Settings */}
               <View
-                style={{
-                  backgroundColor: isDarkMode ? "#1f2937" : "#ffffff",
-                  borderRadius: 16,
-                  shadowColor: "#000",
-                  shadowOffset: { width: 0, height: 2 },
-                  shadowOpacity: 0.1,
-                  shadowRadius: 4,
-                  marginBottom: 24,
-                  padding: 16,
-                }}
+                className={`rounded-2xl shadow-sm mb-6 p-4 ${
+                  isDarkMode ? "bg-gray-800" : "bg-white"
+                }`}
               >
                 <Text
-                  style={{
-                    fontSize: 14,
-                    fontWeight: "600",
-                    marginBottom: 12,
-                    color: isDarkMode ? "#e5e7eb" : "#111827",
-                  }}
+                  className={`text-sm font-semibold mb-3 ${
+                    isDarkMode ? "text-gray-200" : "text-gray-900"
+                  }`}
                 >
                   {t("profile.sections.accountSettings")}
                 </Text>
@@ -1174,24 +970,14 @@ const Profile = () => {
 
               {/* Tracking & Analysis */}
               <View
-                style={{
-                  backgroundColor: isDarkMode ? "#1f2937" : "#ffffff",
-                  borderRadius: 16,
-                  shadowColor: "#000",
-                  shadowOffset: { width: 0, height: 2 },
-                  shadowOpacity: 0.1,
-                  shadowRadius: 4,
-                  marginBottom: 24,
-                  padding: 16,
-                }}
+                className={`rounded-2xl shadow-sm mb-6 p-4 ${
+                  isDarkMode ? "bg-gray-800" : "bg-white"
+                }`}
               >
                 <Text
-                  style={{
-                    fontSize: 14,
-                    fontWeight: "600",
-                    marginBottom: 12,
-                    color: isDarkMode ? "#e5e7eb" : "#111827",
-                  }}
+                  className={`text-sm font-semibold mb-3 ${
+                    isDarkMode ? "text-gray-200" : "text-gray-900"
+                  }`}
                 >
                   {t("profile.sections.trackingAnalysis")}
                 </Text>
@@ -1221,24 +1007,14 @@ const Profile = () => {
 
               {/* Preferences */}
               <View
-                style={{
-                  backgroundColor: isDarkMode ? "#1f2937" : "#ffffff",
-                  borderRadius: 16,
-                  shadowColor: "#000",
-                  shadowOffset: { width: 0, height: 2 },
-                  shadowOpacity: 0.1,
-                  shadowRadius: 4,
-                  marginBottom: 24,
-                  padding: 16,
-                }}
+                className={`rounded-2xl shadow-sm mb-6 p-4 ${
+                  isDarkMode ? "bg-gray-800" : "bg-white"
+                }`}
               >
                 <Text
-                  style={{
-                    fontSize: 14,
-                    fontWeight: "600",
-                    marginBottom: 12,
-                    color: isDarkMode ? "#e5e7eb" : "#111827",
-                  }}
+                  className={`text-sm font-semibold mb-3 ${
+                    isDarkMode ? "text-gray-200" : "text-gray-900"
+                  }`}
                 >
                   {t("profile.sections.preferences")}
                 </Text>
@@ -1264,38 +1040,24 @@ const Profile = () => {
 
           {/* Sign Out Button - Outside ScrollView */}
           <View
-            style={{
-              paddingHorizontal: 16,
-              paddingVertical: 16,
-              backgroundColor: isDarkMode ? "#111827" : "#ffffff",
-              borderTopWidth: 1,
-              borderTopColor: isDarkMode ? "#374151" : "#f3f4f6",
-            }}
+            className={`px-4 py-4 border-t ${
+              isDarkMode
+                ? "bg-gray-900 border-gray-700"
+                : "bg-white border-gray-100"
+            }`}
           >
             <TouchableOpacity
               onPress={handleLogout}
               disabled={showLogoutAnimation || showLogoutDialog}
-              style={{
-                overflow: "hidden",
-                borderRadius: 12,
-              }}
+              className="overflow-hidden rounded-xl"
             >
               <LinearGradient
                 colors={["#ef4444", "#dc2626"]}
-                style={{
-                  paddingVertical: 16,
-                }}
+                className="py-4"
                 start={{ x: 0, y: 0 }}
                 end={{ x: 1, y: 1 }}
               >
-                <Text
-                  style={{
-                    color: "#ffffff",
-                    textAlign: "center",
-                    fontWeight: "600",
-                    fontSize: 16,
-                  }}
-                >
+                <Text className="text-white text-center font-semibold text-base">
                   {showLogoutAnimation
                     ? "Signing Out..."
                     : t("profile.options.signOut")}

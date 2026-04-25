@@ -1,8 +1,6 @@
 import "../global.css";
 
-import notifee, { AndroidImportance } from "@notifee/react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import messaging from "@react-native-firebase/messaging";
 import { useFonts } from "expo-font";
 import { LinearGradient } from "expo-linear-gradient";
 import {
@@ -13,7 +11,14 @@ import {
   useSegments,
 } from "expo-router";
 import React, { useCallback, useEffect, useRef } from "react";
-import { ActivityIndicator, Animated, Image, Text, View } from "react-native";
+import {
+  ActivityIndicator,
+  Animated,
+  Image,
+  NativeModules,
+  Text,
+  View,
+} from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import images from "../constants/images";
 import { CaloriesProvider } from "../context/CaloriesContext";
@@ -23,38 +28,64 @@ import { LanguageProvider } from "../context/LanguageContext";
 import { ThemeProvider } from "../context/ThemeContext";
 import { storeNotification } from "../utils/notificationUtils";
 
+const getNativeNotificationModules = () => {
+  if (!NativeModules?.RNFBAppModule) {
+    return null;
+  }
+
+  try {
+    const messagingModule = require("@react-native-firebase/messaging").default;
+    const notifeePackage = require("@notifee/react-native");
+
+    return {
+      messaging: messagingModule,
+      notifee: notifeePackage?.default,
+      AndroidImportance: notifeePackage?.AndroidImportance,
+    };
+  } catch {
+    return null;
+  }
+};
+
+const nativeNotificationModules = getNativeNotificationModules();
+
 // Background notification handler
-messaging().setBackgroundMessageHandler(async (remoteMessage) => {
-  console.log("[FCM] Background message received:", remoteMessage);
+if (nativeNotificationModules?.messaging && nativeNotificationModules?.notifee) {
+  nativeNotificationModules.messaging().setBackgroundMessageHandler(
+    async (remoteMessage) => {
+      console.log("[FCM] Background message received:", remoteMessage);
 
-  // Store notification for history
-  await storeNotification({
-    title: remoteMessage.notification?.title || "Notification",
-    message: remoteMessage.notification?.body || "",
-    time: new Date().toISOString(),
-    type: remoteMessage.data?.type || remoteMessage.data?.category || "system",
-    data: remoteMessage.data,
-    read: false,
-  });
+      // Store notification for history
+      await storeNotification({
+        title: remoteMessage.notification?.title || "Notification",
+        message: remoteMessage.notification?.body || "",
+        time: new Date().toISOString(),
+        type:
+          remoteMessage.data?.type || remoteMessage.data?.category || "system",
+        data: remoteMessage.data,
+        read: false,
+      });
 
-  // Display notification using notifee
-  await notifee.displayNotification({
-    title: remoteMessage.notification?.title || "Notification",
-    body: remoteMessage.notification?.body || "",
-    data: remoteMessage.data,
-    android: {
-      channelId: remoteMessage.data?.category || "default",
-      importance: AndroidImportance.HIGH,
-      pressAction: {
-        id: "default",
-      },
+      // Display notification using notifee
+      await nativeNotificationModules.notifee.displayNotification({
+        title: remoteMessage.notification?.title || "Notification",
+        body: remoteMessage.notification?.body || "",
+        data: remoteMessage.data,
+        android: {
+          channelId: remoteMessage.data?.category || "default",
+          importance: nativeNotificationModules.AndroidImportance?.HIGH,
+          pressAction: {
+            id: "default",
+          },
+        },
+      });
     },
-  });
-});
+  );
 
-notifee.onBackgroundEvent(async ({ type, detail }) => {
-  console.log("[Notifee] Background event:", type, detail);
-});
+  nativeNotificationModules.notifee.onBackgroundEvent(async ({ type, detail }) => {
+    console.log("[Notifee] Background event:", type, detail);
+  });
+}
 
 const linking = {
   prefixes: ["https://trackeatfit.xyz", "com.inc.TrackEatFit://"],
@@ -212,13 +243,23 @@ const RootLayout = () => {
   useEffect(() => {
     const initializeNotifications = async () => {
       try {
+        if (!nativeNotificationModules?.messaging || !nativeNotificationModules?.notifee) {
+          console.log("[Notifications] Native modules unavailable. Skipping initialization.");
+          return;
+        }
+
         console.log("[Notifications] Initializing notification system...");
 
         // Request notification permissions
-        const authStatus = await messaging().requestPermission();
+        const authStatus =
+          await nativeNotificationModules.messaging().requestPermission();
         const enabled =
-          authStatus === messaging.AuthorizationStatus.AUTHORIZED ||
-          authStatus === messaging.AuthorizationStatus.PROVISIONAL;
+          authStatus ===
+            nativeNotificationModules.messaging.AuthorizationStatus
+              .AUTHORIZED ||
+          authStatus ===
+            nativeNotificationModules.messaging.AuthorizationStatus
+              .PROVISIONAL;
 
         if (enabled) {
           console.log("[Notifications] Permission granted:", authStatus);
@@ -227,76 +268,76 @@ const RootLayout = () => {
         }
 
         // Create notification channels
-        await notifee.createChannel({
+        await nativeNotificationModules.notifee.createChannel({
           id: "default",
           name: "Default Channel",
-          importance: AndroidImportance.HIGH,
+          importance: nativeNotificationModules.AndroidImportance?.HIGH,
           sound: "default",
         });
-        await notifee.createChannel({
+        await nativeNotificationModules.notifee.createChannel({
           id: "meal_reminder",
           name: "Meal Reminders",
-          importance: AndroidImportance.HIGH,
+          importance: nativeNotificationModules.AndroidImportance?.HIGH,
           sound: "default",
         });
-        await notifee.createChannel({
+        await nativeNotificationModules.notifee.createChannel({
           id: "water_reminder",
           name: "Water Reminders",
-          importance: AndroidImportance.HIGH,
+          importance: nativeNotificationModules.AndroidImportance?.HIGH,
           sound: "default",
         });
-        await notifee.createChannel({
+        await nativeNotificationModules.notifee.createChannel({
           id: "exercise_reminder",
           name: "Exercise Reminders",
-          importance: AndroidImportance.HIGH,
+          importance: nativeNotificationModules.AndroidImportance?.HIGH,
           sound: "default",
         });
-        await notifee.createChannel({
+        await nativeNotificationModules.notifee.createChannel({
           id: "weight_tracking",
           name: "Weight Tracking",
-          importance: AndroidImportance.HIGH,
+          importance: nativeNotificationModules.AndroidImportance?.HIGH,
           sound: "default",
         });
-        await notifee.createChannel({
+        await nativeNotificationModules.notifee.createChannel({
           id: "sleep_reminder",
           name: "Sleep Reminders",
-          importance: AndroidImportance.HIGH,
+          importance: nativeNotificationModules.AndroidImportance?.HIGH,
           sound: "default",
         });
-        await notifee.createChannel({
+        await nativeNotificationModules.notifee.createChannel({
           id: "milestone_achievement",
           name: "Achievements",
-          importance: AndroidImportance.HIGH,
+          importance: nativeNotificationModules.AndroidImportance?.HIGH,
           sound: "default",
         });
-        await notifee.createChannel({
+        await nativeNotificationModules.notifee.createChannel({
           id: "weekly_report",
           name: "Weekly Reports",
-          importance: AndroidImportance.HIGH,
+          importance: nativeNotificationModules.AndroidImportance?.HIGH,
           sound: "default",
         });
-        await notifee.createChannel({
+        await nativeNotificationModules.notifee.createChannel({
           id: "streak_reminder",
           name: "Streak Reminders",
-          importance: AndroidImportance.HIGH,
+          importance: nativeNotificationModules.AndroidImportance?.HIGH,
           sound: "default",
         });
-        await notifee.createChannel({
+        await nativeNotificationModules.notifee.createChannel({
           id: "payment_success",
           name: "Payment Success",
-          importance: AndroidImportance.HIGH,
+          importance: nativeNotificationModules.AndroidImportance?.HIGH,
           sound: "default",
         });
-        await notifee.createChannel({
+        await nativeNotificationModules.notifee.createChannel({
           id: "payment_failed",
           name: "Payment Failed",
-          importance: AndroidImportance.HIGH,
+          importance: nativeNotificationModules.AndroidImportance?.HIGH,
           sound: "default",
         });
-        await notifee.createChannel({
+        await nativeNotificationModules.notifee.createChannel({
           id: "chat",
           name: "Chat Messages",
-          importance: AndroidImportance.HIGH,
+          importance: nativeNotificationModules.AndroidImportance?.HIGH,
           sound: "default",
         });
 
@@ -311,9 +352,16 @@ const RootLayout = () => {
 
   // FCM foreground message handler
   useEffect(() => {
+    if (!nativeNotificationModules?.messaging || !nativeNotificationModules?.notifee) {
+      console.log("[FCM] Native modules unavailable. Foreground handler not registered.");
+      return;
+    }
+
     console.log("[FCM] Setting up foreground message handler...");
 
-    const unsubscribe = messaging().onMessage(async (remoteMessage) => {
+    const unsubscribe = nativeNotificationModules
+      .messaging()
+      .onMessage(async (remoteMessage) => {
       console.log(
         "[FCM] Foreground message received:",
         JSON.stringify(remoteMessage, null, 2),
@@ -335,13 +383,14 @@ const RootLayout = () => {
         console.log("[FCM] Notification stored successfully");
 
         // Display notification in foreground using notifee
-        const notificationId = await notifee.displayNotification({
+        const notificationId =
+          await nativeNotificationModules.notifee.displayNotification({
           title: remoteMessage.notification?.title || "Notification",
           body: remoteMessage.notification?.body || "",
           data: remoteMessage.data,
           android: {
             channelId: remoteMessage.data?.category || "default",
-            importance: AndroidImportance.HIGH,
+            importance: nativeNotificationModules.AndroidImportance?.HIGH,
             sound: "default",
             pressAction: {
               id: "default",
