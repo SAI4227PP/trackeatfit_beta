@@ -1,2 +1,4 @@
 .vercel
+# Keep local credentials and configuration out of version control.
 .env
+.env.*
