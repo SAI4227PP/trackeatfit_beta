@@ -1,34 +1,45 @@
-import { Ionicons } from '@expo/vector-icons';
-import AsyncStorage from '@react-native-async-storage/async-storage';
-import * as Device from 'expo-device';
-import { useNavigation, useRouter } from 'expo-router';
-import { useCallback, useEffect, useState } from 'react';
-import { ActivityIndicator, Image, Platform, SafeAreaView, ScrollView, Text, TextInput, TouchableOpacity, View } from 'react-native';
-import CustomAlertSign from '../../components/CustomAlertSign';
-import images from '../../constants/images';
-import { useGlobalContext } from '../../context/GlobalProvider';
-import analyticsService from '../../utils/firebaseAnalytics';
+import { Ionicons } from "@expo/vector-icons";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import {
+  GoogleSignin,
+  statusCodes,
+} from "@react-native-google-signin/google-signin";
+import * as Device from "expo-device";
+import { useNavigation, useRouter } from "expo-router";
+import { useCallback, useEffect, useState } from "react";
+import {
+  ActivityIndicator,
+  Image,
+  Platform,
+  SafeAreaView,
+  ScrollView,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
+} from "react-native";
+import CustomAlertSign from "../../components/CustomAlertSign";
+import images from "../../constants/images";
+import { useGlobalContext } from "../../context/GlobalProvider";
+import analyticsService from "../../utils/firebaseAnalytics";
 
 const API_URL = "https://trackeatfit.onrender.com";
 
 const SignUp = () => {
+  const [isGoogleSigningIn, setIsGoogleSigningIn] = useState(false);
   const [isAlertVisible, setIsAlertVisible] = useState(false); // Add this line
-  const [alertMessage, setAlertMessage] = useState(''); // State for alert message
+  const [alertMessage, setAlertMessage] = useState(""); // State for alert message
 
-  
   const [form, setForm] = useState({
-    username: '',
-    email: '',
-    password: ''
+    username: "",
+    email: "",
+    password: "",
   });
   const globalContext = useGlobalContext();
-  const {
-    setUser = () => {},
-    setIsLoggedIn = () => {},
-  } = globalContext;
+  const { setUser = () => {}, setIsLoggedIn = () => {} } = globalContext;
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [emailError, setEmailError] = useState(''); // State for email error message
-  const [passwordError, setPasswordError] = useState(''); // State for password error message
+  const [emailError, setEmailError] = useState(""); // State for email error message
+  const [passwordError, setPasswordError] = useState(""); // State for password error message
   const [showPassword, setShowPassword] = useState(false); // State for password visibility
   const [isCheckedNews, setIsCheckedNews] = useState(false); // State for news checkbox
   const [isCheckedData, setIsCheckedData] = useState(false); // State for data checkbox
@@ -44,54 +55,75 @@ const SignUp = () => {
   // Memoize device info to prevent unnecessary API calls
   const getDeviceInfo = useCallback(async () => {
     if (cachedDeviceInfo) {
-      console.log('Using cached device info:', cachedDeviceInfo);
+      console.log("Using cached device info:", cachedDeviceInfo);
       return cachedDeviceInfo;
     }
 
-    let ipAddress = 'unknown';
+    let ipAddress = "unknown";
     // Use Device and Platform imports (same as sign-in)
     const deviceInfo = {
-      deviceType: Device.deviceType === Device.DeviceType.PHONE ? 'mobile' : 'web',
+      deviceType:
+        Device.deviceType === Device.DeviceType.PHONE ? "mobile" : "web",
       platform: Platform.OS,
       browser: Platform.select
         ? Platform.select({
-            web: typeof navigator !== 'undefined' && navigator?.userAgent?.includes('Chrome') ? 'Chrome' : 
-                 typeof navigator !== 'undefined' && navigator?.userAgent?.includes('Firefox') ? 'Firefox' : 
-                 typeof navigator !== 'undefined' && navigator?.userAgent?.includes('Safari') ? 'Safari' : 'unknown',
-            default: 'React Native'
+            web:
+              typeof navigator !== "undefined" &&
+              navigator?.userAgent?.includes("Chrome")
+                ? "Chrome"
+                : typeof navigator !== "undefined" &&
+                    navigator?.userAgent?.includes("Firefox")
+                  ? "Firefox"
+                  : typeof navigator !== "undefined" &&
+                      navigator?.userAgent?.includes("Safari")
+                    ? "Safari"
+                    : "unknown",
+            default: "React Native",
           })
-        : 'React Native',
+        : "React Native",
       os: Platform.select
         ? Platform.select({
             ios: `iOS ${Platform.Version}`,
             android: `Android ${Platform.Version}`,
-            web: typeof navigator !== 'undefined' ? navigator?.platform || 'unknown' : 'unknown'
+            web:
+              typeof navigator !== "undefined"
+                ? navigator?.platform || "unknown"
+                : "unknown",
           })
-        : 'unknown'
+        : "unknown",
     };
 
-    console.log('Initial device info:', deviceInfo);
+    console.log("Initial device info:", deviceInfo);
 
     try {
-      const res = await fetch('https://api.ipify.org?format=json');
+      const res = await fetch("https://api.ipify.org?format=json");
       const data = await res.json();
       deviceInfo.ip = data.ip;
-      console.log('IP address fetched:', data.ip);
+      console.log("IP address fetched:", data.ip);
     } catch (error) {
-      console.error('Error fetching IP:', error);
-      deviceInfo.ip = 'unknown';
+      console.error("Error fetching IP:", error);
+      deviceInfo.ip = "unknown";
     }
 
-    console.log('Final device info:', deviceInfo);
+    console.log("Final device info:", deviceInfo);
     setCachedDeviceInfo(deviceInfo);
     return deviceInfo;
   }, [cachedDeviceInfo]);
 
   useEffect(() => {
+    // Configure Google Sign-In
+    GoogleSignin.configure({
+      webClientId:
+        "1074372441109-hvl9jv3v4kggko3q54rirt8vviri12g1.apps.googleusercontent.com",
+      offlineAccess: true,
+      forceCodeForRefreshToken: true,
+      prompt: "select_account",
+    });
+
     const loadCheckboxState = async () => {
       try {
-        const newsValue = await AsyncStorage.getItem('isCheckedNews');
-        const dataValue = await AsyncStorage.getItem('isCheckedData');
+        const newsValue = await AsyncStorage.getItem("isCheckedNews");
+        const dataValue = await AsyncStorage.getItem("isCheckedData");
         if (newsValue !== null) {
           setIsCheckedNews(JSON.parse(newsValue));
         }
@@ -99,7 +131,7 @@ const SignUp = () => {
           setIsCheckedData(JSON.parse(dataValue));
         }
       } catch (error) {
-        console.error('Failed to load checkbox state', error);
+        console.error("Failed to load checkbox state", error);
       }
     };
 
@@ -110,37 +142,37 @@ const SignUp = () => {
   const validateEmail = (email) => {
     const re = /^[^\s@]+@gmail\.com$/;
     return re.test(String(email).toLowerCase());
-  }
+  };
 
   const handleBack = () => {
-    navigation.navigate('sign-in'); // Navigate to Search screen
-  }
+    navigation.navigate("sign-in"); // Navigate to Search screen
+  };
 
   const toggleCheckboxNews = async () => {
     try {
       const newValue = !isCheckedNews;
       setIsCheckedNews(newValue);
-      await AsyncStorage.setItem('isCheckedNews', JSON.stringify(newValue));
+      await AsyncStorage.setItem("isCheckedNews", JSON.stringify(newValue));
     } catch (error) {
-      console.error('Failed to save checkbox state', error);
+      console.error("Failed to save checkbox state", error);
     }
-  }
+  };
 
   const toggleCheckboxData = async () => {
     try {
       const newValue = !isCheckedData;
       setIsCheckedData(newValue);
-      await AsyncStorage.setItem('isCheckedData', JSON.stringify(newValue));
+      await AsyncStorage.setItem("isCheckedData", JSON.stringify(newValue));
     } catch (error) {
-      console.error('Failed to save checkbox state', error);
+      console.error("Failed to save checkbox state", error);
     }
-  }
+  };
 
   // Function to extract the part before @ in the email
-const generateUniqueName = (gmail) => {
-  const prefix = gmail.split('@')[0]; // Get the part before "@"
-  return prefix;
-};
+  const generateUniqueName = (gmail) => {
+    const prefix = gmail.split("@")[0]; // Get the part before "@"
+    return prefix;
+  };
 
   // Replace showAlert to use CustomAlertSign
   const showAlert = (message) => {
@@ -150,33 +182,32 @@ const generateUniqueName = (gmail) => {
 
   // Handle form submission
   const submit = async () => {
-    console.log("Form data:", form);  // Log the form data before submission
+    console.log("Form data:", form); // Log the form data before submission
 
     if (!form.username || !form.email || !form.password) {
-      showAlert('Please fill in all the fields');
+      showAlert("Please fill in all the fields");
       return;
     }
 
     if (!validateEmail(form.email)) {
-      setEmailError('Invalid email');
-      console.log("Email validation failed");  // Log email validation failure
+      setEmailError("Invalid email");
+      console.log("Email validation failed"); // Log email validation failure
       return;
     } else {
-      setEmailError('');
+      setEmailError("");
     }
 
     if (form.password.length < 8) {
-      setPasswordError('Password must be at least 8 characters');
-      console.log("Password validation failed");  // Log password validation failure
+      setPasswordError("Password must be at least 8 characters");
+      console.log("Password validation failed"); // Log password validation failure
       return;
     } else {
-      setPasswordError('');
+      setPasswordError("");
     }
 
     setIsSubmitting(true);
 
     try {
-
       // Generate unique name from email (before the @ symbol)
       let uniqueName = generateUniqueName(form.email);
       console.log("Generated unique name:", uniqueName);
@@ -186,32 +217,35 @@ const generateUniqueName = (gmail) => {
       console.log("Device info for registration:", deviceInfo);
 
       // Create the user using the fetch API
-      const result = await fetch(`${API_URL}/users/create-user`, {  // Your API endpoint
-        method: 'POST',
+      const result = await fetch(`${API_URL}/users/create-user`, {
+        // Your API endpoint
+        method: "POST",
         headers: {
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
         },
         body: JSON.stringify({
           email: form.email,
           password: form.password,
           username: form.username,
           uniqueName: uniqueName,
-          deviceInfo
-        })
+          deviceInfo,
+        }),
       });
 
       const resultData = await result.json();
-      console.log("API response:", resultData);  // Log the API response
+      console.log("API response:", resultData); // Log the API response
 
       if (resultData.message === "User created successfully") {
         console.log("User created successfully:", resultData);
-      
+
         // Clear the checkbox states
-        await AsyncStorage.removeItem('isCheckedNews');
-        await AsyncStorage.removeItem('isCheckedData');
+        await AsyncStorage.removeItem("isCheckedNews");
+        await AsyncStorage.removeItem("isCheckedData");
 
         if (!setUser || !setIsLoggedIn) {
-          showAlert('Global context is not available. Please ensure the provider is set up.');
+          showAlert(
+            "Global context is not available. Please ensure the provider is set up.",
+          );
           setIsSubmitting(false);
           return;
         }
@@ -222,20 +256,140 @@ const generateUniqueName = (gmail) => {
         // Optionally, save token if returned: await AsyncStorage.setItem('authToken', resultData.token);
 
         // If you want user to sign in manually, do not call setUser/setIsLoggedIn here.
-        showAlert('Account created successfully! Please sign in.');
-        analyticsService.logEvent('signup', { method: 'email', status: 'success', email: form.email });
-      
+        showAlert("Account created successfully! Please sign in.");
+        analyticsService.logEvent("signup", {
+          method: "email",
+          status: "success",
+          email: form.email,
+        });
       } else if (resultData.error) {
-        setEmailError('An error occurred: ' + resultData.error);
-        analyticsService.logEvent('signup', { method: 'email', status: 'error', error: resultData.error, email: form.email });
+        setEmailError("An error occurred: " + resultData.error);
+        analyticsService.logEvent("signup", {
+          method: "email",
+          status: "error",
+          error: resultData.error,
+          email: form.email,
+        });
       } else {
-        throw new Error(resultData.message || 'User creation failed');
+        throw new Error(resultData.message || "User creation failed");
       }
     } catch (error) {
-      showAlert(error.message || 'An error occurred during sign up');
-      analyticsService.logEvent('signup', { method: 'email', status: 'error', error: error.message, email: form.email });
+      showAlert(error.message || "An error occurred during sign up");
+      analyticsService.logEvent("signup", {
+        method: "email",
+        status: "error",
+        error: error.message,
+        email: form.email,
+      });
     } finally {
       setIsSubmitting(false);
+    }
+  };
+
+  // Google Sign-Up Handler
+  const handleGoogleSignUp = async () => {
+    setIsGoogleSigningIn(true);
+    try {
+      await GoogleSignin.hasPlayServices();
+      await GoogleSignin.signOut();
+      const response = await GoogleSignin.signIn({
+        prompt: "select_account",
+      });
+
+      // Use Google user info for backend sign-up
+      const googleUser = response?.user || response?.data?.user;
+      if (!googleUser) {
+        throw new Error("Google Sign-Up failed: No user data returned");
+      }
+
+      const { email, id: googleId, name } = googleUser;
+      const idTokenObj = await GoogleSignin.getTokens();
+      const idToken = idTokenObj.idToken;
+      const deviceInfo = await getDeviceInfo();
+
+      // Extract username from email (part before @)
+      const uniqueName = generateUniqueName(email);
+
+      // Send to backend to create user
+      const createResponse = await fetch(`${API_URL}/users/create-user`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          email,
+          username: name || uniqueName,
+          uniqueName: uniqueName,
+          googleId,
+          idToken,
+          deviceInfo,
+        }),
+      });
+
+      const createData = await createResponse.json();
+      console.log("Google sign-up response:", createData);
+
+      if (createData.error) {
+        showAlert(createData.error);
+        analyticsService.logEvent("signup", {
+          method: "google",
+          status: "error",
+          error: createData.error,
+        });
+        return;
+      }
+
+      if (createData.message === "User created successfully") {
+        // Clear checkbox states
+        await AsyncStorage.removeItem("isCheckedNews");
+        await AsyncStorage.removeItem("isCheckedData");
+
+        showAlert("Account created successfully with Google! Please sign in.");
+        analyticsService.logEvent("signup", {
+          method: "google",
+          status: "success",
+          email,
+        });
+
+        // Navigate to sign-in after a short delay
+        setTimeout(() => {
+          router.push("/sign-in");
+        }, 1500);
+      }
+    } catch (error) {
+      console.error("Detailed Google Sign-Up error:", {
+        code: error.code,
+        message: error.message,
+        stack: error.stack,
+        fullError: error,
+      });
+
+      if (error.code === statusCodes.SIGN_IN_CANCELLED) {
+        console.log("User cancelled sign-up");
+        return;
+      }
+
+      let errorMessage = "Google Sign-Up failed: ";
+      switch (error.code) {
+        case statusCodes.PLAY_SERVICES_NOT_AVAILABLE:
+          errorMessage += "Play Services not available";
+          break;
+        case statusCodes.IN_PROGRESS:
+          errorMessage += "Sign up already in progress";
+          break;
+        default:
+          errorMessage += error.message || "Unknown error occurred";
+      }
+
+      showAlert(errorMessage);
+      analyticsService.logEvent("signup", {
+        method: "google",
+        status: "error",
+        error: errorMessage,
+        errorCode: error.code,
+      });
+    } finally {
+      setIsGoogleSigningIn(false);
     }
   };
 
@@ -244,64 +398,107 @@ const generateUniqueName = (gmail) => {
       const payload = { username, email };
       console.log("Email Payload:", payload); // Log the payload
 
-      const response = await fetch(`${API_URL}/send-welcome-email`, { // Your backend URL
-        method: 'POST',
+      const response = await fetch(`${API_URL}/send-welcome-email`, {
+        // Your backend URL
+        method: "POST",
         headers: {
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
         },
         body: JSON.stringify(payload),
       });
-    
+
       if (!response.ok) {
-        throw new Error('Failed to send welcome email');
+        throw new Error("Failed to send welcome email");
       }
       const result = await response.json();
-      console.log("Welcome email response:", result);  // Log the entire response to see its structure
-      
+      console.log("Welcome email response:", result); // Log the entire response to see its structure
+
       // Check if 'uri' is present in the response
       if (result.uri) {
-        console.log("Email sent, URI:", result.uri);  // Log the URI if present
+        console.log("Email sent, URI:", result.uri); // Log the URI if present
       } else {
         console.warn("No URI returned in the response");
       }
       console.log("Welcome email sent successfully!");
     } catch (error) {
       console.error("Error sending welcome email:", error);
-      setAlertMessage('Failed to send welcome email');
+      setAlertMessage("Failed to send welcome email");
     }
   };
 
   const handlePrivacyNotice = () => {
-    navigation.navigate('screens/PrivacyNotice');
+    navigation.navigate("screens/PrivacyNotice");
   };
 
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: '#f3f4f6' }}>
-      <ScrollView contentContainerStyle={{ flexGrow: 1 }} showsVerticalScrollIndicator={false}>
-        <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', padding: 20 }}>
-          <View style={{
-            backgroundColor: '#fff',
-            width: '100%',
-            maxWidth: 400,
-            borderRadius: 24,
-            shadowColor: '#000',
-            shadowOffset: { width: 0, height: 2 },
-            shadowOpacity: 0.1,
-            shadowRadius: 8,
-            elevation: 3,
-            padding: 24
-          }}>
+    <SafeAreaView style={{ flex: 1, backgroundColor: "#f3f4f6" }}>
+      <ScrollView
+        contentContainerStyle={{ flexGrow: 1 }}
+        showsVerticalScrollIndicator={false}
+      >
+        <View
+          style={{
+            flex: 1,
+            justifyContent: "center",
+            alignItems: "center",
+            padding: 20,
+          }}
+        >
+          <View
+            style={{
+              backgroundColor: "#fff",
+              width: "100%",
+              maxWidth: 400,
+              borderRadius: 24,
+              shadowColor: "#000",
+              shadowOffset: { width: 0, height: 2 },
+              shadowOpacity: 0.1,
+              shadowRadius: 8,
+              elevation: 3,
+              padding: 24,
+            }}
+          >
             {/* Logo */}
-            <View style={{ alignItems: 'center', marginBottom: 4 }}>
-              <Image source={images.logo} style={{ width: 96, height: 96 }} resizeMode="contain" />
+            <View style={{ alignItems: "center", marginBottom: 4 }}>
+              <Image
+                source={images.logo}
+                style={{ width: 96, height: 96 }}
+                resizeMode="contain"
+              />
             </View>
             {/* Title */}
-            <Text style={{ fontSize: 20, fontWeight: '600', textAlign: 'center', marginBottom: 4 }}>Create Account</Text>
-            <Text style={{ color: '#6b7280', textAlign: 'center', marginBottom: 16 }}>Please enter your details to register.</Text>
+            <Text
+              style={{
+                fontSize: 20,
+                fontWeight: "600",
+                textAlign: "center",
+                marginBottom: 4,
+              }}
+            >
+              Create Account
+            </Text>
+            <Text
+              style={{
+                color: "#6b7280",
+                textAlign: "center",
+                marginBottom: 16,
+              }}
+            >
+              Please enter your details to register.
+            </Text>
 
             {/* Username Input */}
             <View style={{ marginBottom: 16 }}>
-              <Text style={{ color: '#374151', fontWeight: '500', marginBottom: 4, marginLeft: 4 }}>Username</Text>
+              <Text
+                style={{
+                  color: "#374151",
+                  fontWeight: "500",
+                  marginBottom: 4,
+                  marginLeft: 4,
+                }}
+              >
+                Username
+              </Text>
               <TextInput
                 placeholder="e.g. example"
                 placeholderTextColor="#aaa"
@@ -312,10 +509,10 @@ const generateUniqueName = (gmail) => {
                   borderRadius: 16,
                   paddingHorizontal: 16,
                   paddingVertical: 12,
-                  fontWeight: '600',
+                  fontWeight: "600",
                   fontSize: 16,
-                  backgroundColor: '#fff',
-                  borderColor: usernameFocused ? '#000' : '#d1d5db'
+                  backgroundColor: "#fff",
+                  borderColor: usernameFocused ? "#000" : "#d1d5db",
                 }}
                 onFocus={() => setUsernameFocused(true)}
                 onBlur={() => setUsernameFocused(false)}
@@ -323,7 +520,16 @@ const generateUniqueName = (gmail) => {
             </View>
             {/* Email Input */}
             <View style={{ marginBottom: 16 }}>
-              <Text style={{ color: '#374151', fontWeight: '500', marginBottom: 4, marginLeft: 4 }}>Email</Text>
+              <Text
+                style={{
+                  color: "#374151",
+                  fontWeight: "500",
+                  marginBottom: 4,
+                  marginLeft: 4,
+                }}
+              >
+                Email
+              </Text>
               <TextInput
                 placeholder="example@gmail.com"
                 placeholderTextColor="#aaa"
@@ -331,9 +537,9 @@ const generateUniqueName = (gmail) => {
                 onChangeText={(text) => {
                   setForm({ ...form, email: text });
                   if (!validateEmail(text)) {
-                    setEmailError('Invalid email');
+                    setEmailError("Invalid email");
                   } else {
-                    setEmailError('');
+                    setEmailError("");
                   }
                 }}
                 style={{
@@ -341,30 +547,43 @@ const generateUniqueName = (gmail) => {
                   borderRadius: 16,
                   paddingHorizontal: 16,
                   paddingVertical: 12,
-                  fontWeight: '600',
+                  fontWeight: "600",
                   fontSize: 16,
-                  backgroundColor: '#fff',
-                  borderColor: emailFocused ? '#000' : '#d1d5db'
+                  backgroundColor: "#fff",
+                  borderColor: emailFocused ? "#000" : "#d1d5db",
                 }}
                 keyboardType="email-address"
                 onFocus={() => setEmailFocused(true)}
                 onBlur={() => setEmailFocused(false)}
               />
-              {emailError ? <Text style={{ color: '#ef4444' }}>{emailError}</Text> : null}
+              {emailError ? (
+                <Text style={{ color: "#ef4444" }}>{emailError}</Text>
+              ) : null}
             </View>
             {/* Password Input */}
             <View style={{ marginBottom: 16 }}>
-              <Text style={{ color: '#374151', fontWeight: '500', marginBottom: 4, marginLeft: 4 }}>Password</Text>
-              <View style={{
-                borderRadius: 16,
-                paddingHorizontal: 16,
-                paddingVertical: 12,
-                flexDirection: 'row',
-                alignItems: 'center',
-                borderWidth: 1,
-                backgroundColor: '#fff',
-                borderColor: passwordFocused ? '#000' : '#d1d5db'
-              }}>
+              <Text
+                style={{
+                  color: "#374151",
+                  fontWeight: "500",
+                  marginBottom: 4,
+                  marginLeft: 4,
+                }}
+              >
+                Password
+              </Text>
+              <View
+                style={{
+                  borderRadius: 16,
+                  paddingHorizontal: 16,
+                  paddingVertical: 12,
+                  flexDirection: "row",
+                  alignItems: "center",
+                  borderWidth: 1,
+                  backgroundColor: "#fff",
+                  borderColor: passwordFocused ? "#000" : "#d1d5db",
+                }}
+              >
                 <TextInput
                   placeholder="********"
                   placeholderTextColor="#aaa"
@@ -373,36 +592,65 @@ const generateUniqueName = (gmail) => {
                   onBlur={() => {
                     setPasswordFocused(false);
                     if (form.password.length < 8) {
-                      setPasswordError('Password must be at least 8 characters');
+                      setPasswordError(
+                        "Password must be at least 8 characters",
+                      );
                     } else {
-                      setPasswordError('');
+                      setPasswordError("");
                     }
                   }}
                   onFocus={() => setPasswordFocused(true)}
                   secureTextEntry={!showPassword}
                   style={{
                     flex: 1,
-                    fontWeight: '600',
+                    fontWeight: "600",
                     fontSize: 16,
-                    color: '#111827',
-                    paddingVertical: 0
+                    color: "#111827",
+                    paddingVertical: 0,
                   }}
                 />
-                <TouchableOpacity onPress={() => setShowPassword(!showPassword)}>
-                  <Ionicons name={showPassword ? "eye-outline" : "eye-off-outline"} size={20} color="gray" />
+                <TouchableOpacity
+                  onPress={() => setShowPassword(!showPassword)}
+                >
+                  <Ionicons
+                    name={showPassword ? "eye-outline" : "eye-off-outline"}
+                    size={20}
+                    color="gray"
+                  />
                 </TouchableOpacity>
               </View>
-              {passwordError ? <Text style={{ color: '#ef4444' }}>{passwordError}</Text> : null}
+              {passwordError ? (
+                <Text style={{ color: "#ef4444" }}>{passwordError}</Text>
+              ) : null}
             </View>
 
             {/* News Checkbox */}
-            <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 8 }}>
-              <TouchableOpacity onPress={toggleCheckboxNews} style={{ marginRight: 8 }}>
-                <Ionicons name={isCheckedNews ? "checkbox" : "checkbox-outline"} size={20} color="black" />
+            <View
+              style={{
+                flexDirection: "row",
+                alignItems: "center",
+                marginBottom: 8,
+              }}
+            >
+              <TouchableOpacity
+                onPress={toggleCheckboxNews}
+                style={{ marginRight: 8 }}
+              >
+                <Ionicons
+                  name={isCheckedNews ? "checkbox" : "checkbox-outline"}
+                  size={20}
+                  color="black"
+                />
               </TouchableOpacity>
-              <Text style={{ flex: 1, color: '#374151', fontSize: 14 }}>
-                I consent for receiving exciting news {'\n'}and special promotions as indicated in{' '}
-                <Text style={{ color: '#047857', textDecorationLine: 'underline' }} onPress={handlePrivacyNotice}>Privacy Notice</Text>
+              <Text style={{ flex: 1, color: "#374151", fontSize: 14 }}>
+                I consent for receiving exciting news {"\n"}and special
+                promotions as indicated in{" "}
+                <Text
+                  style={{ color: "#047857", textDecorationLine: "underline" }}
+                  onPress={handlePrivacyNotice}
+                >
+                  Privacy Notice
+                </Text>
               </Text>
             </View>
             {/* Data Checkbox */}
@@ -418,11 +666,13 @@ const generateUniqueName = (gmail) => {
 
             {/* Terms */}
             <View style={{ marginBottom: 16 }}>
-              <Text style={{ fontSize: 12, color: '#374151' }}>
-                By clicking Create account, I accept the{' '}
-                <Text style={{ color: '#047857' }}>Terms & Conditions</Text>, confirm that I read the{' '}
-                <Text style={{ color: '#047857' }}>Privacy Notice</Text> and the{' '}
-                <Text style={{ color: '#047857' }}>Cookie Policy</Text>, and that I am over the age of 18.
+              <Text style={{ fontSize: 12, color: "#374151" }}>
+                By clicking Create account, I accept the{" "}
+                <Text style={{ color: "#047857" }}>Terms & Conditions</Text>,
+                confirm that I read the{" "}
+                <Text style={{ color: "#047857" }}>Privacy Notice</Text> and the{" "}
+                <Text style={{ color: "#047857" }}>Cookie Policy</Text>, and
+                that I am over the age of 18.
               </Text>
             </View>
 
@@ -430,40 +680,110 @@ const generateUniqueName = (gmail) => {
             <TouchableOpacity
               onPress={submit}
               style={{
-                backgroundColor: emailError || passwordError ? '#d1d5db' : '#000',
+                backgroundColor:
+                  emailError || passwordError ? "#d1d5db" : "#000",
                 borderRadius: 16,
                 paddingVertical: 12,
                 marginBottom: 24,
-                alignItems: 'center',
-                opacity: emailError || passwordError ? 0.5 : 1
+                alignItems: "center",
+                opacity: emailError || passwordError ? 0.5 : 1,
               }}
               disabled={!!emailError || !!passwordError || isSubmitting}
             >
               {isSubmitting ? (
                 <ActivityIndicator color="#fff" />
               ) : (
-                <Text style={{
-                  fontSize: 18,
-                  fontWeight: '600',
-                  color: emailError || passwordError ? '#6b7280' : '#fff'
-                }}>
+                <Text
+                  style={{
+                    fontSize: 18,
+                    fontWeight: "600",
+                    color: emailError || passwordError ? "#6b7280" : "#fff",
+                  }}
+                >
                   Create Account
                 </Text>
               )}
             </TouchableOpacity>
 
             {/* OR Divider */}
-            <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 24 }}>
-              <View style={{ flex: 1, height: 1, backgroundColor: '#d1d5db' }} />
-              <Text style={{ marginHorizontal: 8, color: '#6b7280', fontWeight: '600' }}>OR</Text>
-              <View style={{ flex: 1, height: 1, backgroundColor: '#d1d5db' }} />
+            <View
+              style={{
+                flexDirection: "row",
+                alignItems: "center",
+                marginBottom: 24,
+              }}
+            >
+              <View
+                style={{ flex: 1, height: 1, backgroundColor: "#d1d5db" }}
+              />
+              <Text
+                style={{
+                  marginHorizontal: 8,
+                  color: "#6b7280",
+                  fontWeight: "600",
+                }}
+              >
+                OR
+              </Text>
+              <View
+                style={{ flex: 1, height: 1, backgroundColor: "#d1d5db" }}
+              />
             </View>
 
+            {/* Google Sign-Up Button */}
+            <TouchableOpacity
+              onPress={handleGoogleSignUp}
+              style={{
+                backgroundColor: "#fff",
+                borderRadius: 16,
+                paddingVertical: 12,
+                marginBottom: 24,
+                borderWidth: 1,
+                borderColor: "#d1d5db",
+                flexDirection: "row",
+                alignItems: "center",
+                justifyContent: "center",
+              }}
+              disabled={isGoogleSigningIn}
+            >
+              {isGoogleSigningIn ? (
+                <ActivityIndicator color="#000" />
+              ) : (
+                <>
+                  <Image
+                    source={{
+                      uri: "https://developers.google.com/identity/images/g-logo.png",
+                    }}
+                    style={{ width: 20, height: 20 }}
+                    resizeMode="contain"
+                  />
+                  <Text
+                    style={{
+                      color: "#000",
+                      fontWeight: "600",
+                      fontSize: 16,
+                      marginLeft: 8,
+                    }}
+                  >
+                    Sign up with Google
+                  </Text>
+                </>
+              )}
+            </TouchableOpacity>
+
             {/* Register Link */}
-            <View style={{ flexDirection: 'row', justifyContent: 'center', marginTop: 8 }}>
-              <Text style={{ color: '#6b7280' }}>Already have an account? </Text>
+            <View
+              style={{
+                flexDirection: "row",
+                justifyContent: "center",
+                marginTop: 8,
+              }}
+            >
+              <Text style={{ color: "#6b7280" }}>
+                Already have an account?{" "}
+              </Text>
               <TouchableOpacity onPress={() => navigation.navigate("sign-in")}>
-                <Text style={{ color: '#3b82f6' }}>Login</Text>
+                <Text style={{ color: "#3b82f6" }}>Login</Text>
               </TouchableOpacity>
             </View>
           </View>
@@ -475,8 +795,8 @@ const generateUniqueName = (gmail) => {
         onClose={() => {
           setIsAlertVisible(false);
           // If the alert is for successful account creation, redirect to sign-in
-          if (alertMessage && alertMessage.includes('successfully')) {
-            router.push('/sign-in');
+          if (alertMessage && alertMessage.includes("successfully")) {
+            router.push("/sign-in");
           }
         }}
         message={alertMessage}

@@ -1,40 +1,110 @@
-import notifee, { AndroidImportance } from '@notifee/react-native';
-import AsyncStorage from '@react-native-async-storage/async-storage';
-import { useFonts } from 'expo-font';
-import { LinearGradient } from 'expo-linear-gradient';
-import { router, SplashScreen, Stack, useRootNavigationState, useSegments } from 'expo-router';
-import React, { useCallback, useEffect, useRef } from 'react';
-import { ActivityIndicator, Animated, Image, Text, View } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
-import images from '../constants/images';
-import { CaloriesProvider } from '../context/CaloriesContext';
-import GlobalProvider from '../context/GlobalProvider';
-import { GoogleFitProvider } from '../context/GoogleFitContext';
-import { LanguageProvider } from '../context/LanguageContext';
-import { ThemeProvider } from '../context/ThemeContext';
+import "../global.css";
 
-notifee.onBackgroundEvent(async ({ type, detail }) => {
-  console.log('[Notifee] Background event:', type, detail);
-});
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import { useFonts } from "expo-font";
+import { LinearGradient } from "expo-linear-gradient";
+import {
+  router,
+  SplashScreen,
+  Stack,
+  useRootNavigationState,
+  useSegments,
+} from "expo-router";
+import React, { useCallback, useEffect, useRef } from "react";
+import {
+  ActivityIndicator,
+  Animated,
+  Image,
+  NativeModules,
+  Text,
+  View,
+} from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
+import images from "../constants/images";
+import { CaloriesProvider } from "../context/CaloriesContext";
+import GlobalProvider from "../context/GlobalProvider";
+import { GoogleFitProvider } from "../context/GoogleFitContext";
+import { LanguageProvider } from "../context/LanguageContext";
+import { ThemeProvider } from "../context/ThemeContext";
+import { storeNotification } from "../utils/notificationUtils";
+
+const getNativeNotificationModules = () => {
+  if (!NativeModules?.RNFBAppModule) {
+    return null;
+  }
+
+  try {
+    const messagingModule = require("@react-native-firebase/messaging").default;
+    const notifeePackage = require("@notifee/react-native");
+
+    return {
+      messaging: messagingModule,
+      notifee: notifeePackage?.default,
+      AndroidImportance: notifeePackage?.AndroidImportance,
+    };
+  } catch {
+    return null;
+  }
+};
+
+const nativeNotificationModules = getNativeNotificationModules();
+
+// Background notification handler
+if (nativeNotificationModules?.messaging && nativeNotificationModules?.notifee) {
+  nativeNotificationModules.messaging().setBackgroundMessageHandler(
+    async (remoteMessage) => {
+      console.log("[FCM] Background message received:", remoteMessage);
+
+      // Store notification for history
+      await storeNotification({
+        title: remoteMessage.notification?.title || "Notification",
+        message: remoteMessage.notification?.body || "",
+        time: new Date().toISOString(),
+        type:
+          remoteMessage.data?.type || remoteMessage.data?.category || "system",
+        data: remoteMessage.data,
+        read: false,
+      });
+
+      // Display notification using notifee
+      await nativeNotificationModules.notifee.displayNotification({
+        title: remoteMessage.notification?.title || "Notification",
+        body: remoteMessage.notification?.body || "",
+        data: remoteMessage.data,
+        android: {
+          channelId: remoteMessage.data?.category || "default",
+          importance: nativeNotificationModules.AndroidImportance?.HIGH,
+          pressAction: {
+            id: "default",
+          },
+        },
+      });
+    },
+  );
+
+  nativeNotificationModules.notifee.onBackgroundEvent(async ({ type, detail }) => {
+    console.log("[Notifee] Background event:", type, detail);
+  });
+}
 
 const linking = {
-  prefixes: ['https://trackeatfit.xyz', 'com.inc.TrackEatFit://'],
+  prefixes: ["https://trackeatfit.xyz", "com.inc.TrackEatFit://"],
   config: {
     screens: {
-      '(auth)': {
+      "(auth)": {
         screens: {
-          login: 'login',
-          register: 'register',
+          login: "login",
+          register: "register",
         },
       },
-      '(tabs)': {
+      "(tabs)": {
         screens: {
-          home: 'home',
-          profile: 'profile',
+          home: "home",
+          profile: "profile",
         },
       },
-      PostDetails: 'posts/:postId',
-      index: '',
+      PostDetails: "posts/:postId",
+      index: "",
     },
   },
 };
@@ -74,31 +144,31 @@ const RootLayout = () => {
   const checkAuthAndNavigate = useCallback(async () => {
     try {
       const [token, userStr] = await Promise.all([
-        AsyncStorage.getItem('authToken'),
-        AsyncStorage.getItem('user'),
+        AsyncStorage.getItem("authToken"),
+        AsyncStorage.getItem("user"),
       ]);
 
       const isAuthenticated = !!(token && userStr);
-      const inAuthGroup = segments[0] === '(auth)';
-      const inTabsGroup = segments[0] === '(tabs)';
-      const isProfileScreen = segments.includes('Profile');
-      const isIndexScreen = segments.length === 0 || segments[0] === 'index';
+      const inAuthGroup = segments[0] === "(auth)";
+      const inTabsGroup = segments[0] === "(tabs)";
+      const isProfileScreen = segments.includes("Profile");
+      const isIndexScreen = segments.length === 0 || segments[0] === "index";
 
       if (isAuthenticated) {
         if (inAuthGroup || isIndexScreen) {
-          router.replace('/(tabs)/home');
+          router.replace("/(tabs)/home");
         }
       } else {
         if (!isIndexScreen && !inAuthGroup) {
           if (isProfileScreen || inTabsGroup) {
-            console.log('Unauthorized access, redirecting to index...');
-            router.replace('/');
+            console.log("Unauthorized access, redirecting to index...");
+            router.replace("/");
           }
         }
       }
     } catch (error) {
-      console.error('Navigation check failed:', error);
-      router.replace('/');
+      console.error("Navigation check failed:", error);
+      router.replace("/");
     }
   }, [segments]);
 
@@ -123,7 +193,7 @@ const RootLayout = () => {
   useEffect(() => {
     if (fontError) {
       setHasError(true);
-      console.error('Font loading error:', fontError);
+      console.error("Font loading error:", fontError);
     }
   }, [fontError]);
 
@@ -171,13 +241,173 @@ const RootLayout = () => {
   }, [fadeAnim, scaleAnim, fontsLoaded, fontError]);
 
   useEffect(() => {
-    const createChannels = async () => {
-      await notifee.createChannel({ id: 'default', name: 'Default Channel', importance: AndroidImportance.HIGH, sound: 'default' });
-      await notifee.createChannel({ id: 'meal_reminder', name: 'Meal Reminders', importance: AndroidImportance.HIGH, sound: 'default' });
-      await notifee.createChannel({ id: 'payment_success', name: 'Payment Success', importance: AndroidImportance.HIGH, sound: 'default' });
-      await notifee.createChannel({ id: 'payment_failed', name: 'Payment Failed', importance: AndroidImportance.HIGH, sound: 'default' });
+    const initializeNotifications = async () => {
+      try {
+        if (!nativeNotificationModules?.messaging || !nativeNotificationModules?.notifee) {
+          console.log("[Notifications] Native modules unavailable. Skipping initialization.");
+          return;
+        }
+
+        console.log("[Notifications] Initializing notification system...");
+
+        // Request notification permissions
+        const authStatus =
+          await nativeNotificationModules.messaging().requestPermission();
+        const enabled =
+          authStatus ===
+            nativeNotificationModules.messaging.AuthorizationStatus
+              .AUTHORIZED ||
+          authStatus ===
+            nativeNotificationModules.messaging.AuthorizationStatus
+              .PROVISIONAL;
+
+        if (enabled) {
+          console.log("[Notifications] Permission granted:", authStatus);
+        } else {
+          console.warn("[Notifications] Permission denied");
+        }
+
+        // Create notification channels
+        await nativeNotificationModules.notifee.createChannel({
+          id: "default",
+          name: "Default Channel",
+          importance: nativeNotificationModules.AndroidImportance?.HIGH,
+          sound: "default",
+        });
+        await nativeNotificationModules.notifee.createChannel({
+          id: "meal_reminder",
+          name: "Meal Reminders",
+          importance: nativeNotificationModules.AndroidImportance?.HIGH,
+          sound: "default",
+        });
+        await nativeNotificationModules.notifee.createChannel({
+          id: "water_reminder",
+          name: "Water Reminders",
+          importance: nativeNotificationModules.AndroidImportance?.HIGH,
+          sound: "default",
+        });
+        await nativeNotificationModules.notifee.createChannel({
+          id: "exercise_reminder",
+          name: "Exercise Reminders",
+          importance: nativeNotificationModules.AndroidImportance?.HIGH,
+          sound: "default",
+        });
+        await nativeNotificationModules.notifee.createChannel({
+          id: "weight_tracking",
+          name: "Weight Tracking",
+          importance: nativeNotificationModules.AndroidImportance?.HIGH,
+          sound: "default",
+        });
+        await nativeNotificationModules.notifee.createChannel({
+          id: "sleep_reminder",
+          name: "Sleep Reminders",
+          importance: nativeNotificationModules.AndroidImportance?.HIGH,
+          sound: "default",
+        });
+        await nativeNotificationModules.notifee.createChannel({
+          id: "milestone_achievement",
+          name: "Achievements",
+          importance: nativeNotificationModules.AndroidImportance?.HIGH,
+          sound: "default",
+        });
+        await nativeNotificationModules.notifee.createChannel({
+          id: "weekly_report",
+          name: "Weekly Reports",
+          importance: nativeNotificationModules.AndroidImportance?.HIGH,
+          sound: "default",
+        });
+        await nativeNotificationModules.notifee.createChannel({
+          id: "streak_reminder",
+          name: "Streak Reminders",
+          importance: nativeNotificationModules.AndroidImportance?.HIGH,
+          sound: "default",
+        });
+        await nativeNotificationModules.notifee.createChannel({
+          id: "payment_success",
+          name: "Payment Success",
+          importance: nativeNotificationModules.AndroidImportance?.HIGH,
+          sound: "default",
+        });
+        await nativeNotificationModules.notifee.createChannel({
+          id: "payment_failed",
+          name: "Payment Failed",
+          importance: nativeNotificationModules.AndroidImportance?.HIGH,
+          sound: "default",
+        });
+        await nativeNotificationModules.notifee.createChannel({
+          id: "chat",
+          name: "Chat Messages",
+          importance: nativeNotificationModules.AndroidImportance?.HIGH,
+          sound: "default",
+        });
+
+        console.log("[Notifications] All notification channels created");
+      } catch (error) {
+        console.error("[Notifications] Initialization error:", error);
+      }
     };
-    createChannels();
+
+    initializeNotifications();
+  }, []);
+
+  // FCM foreground message handler
+  useEffect(() => {
+    if (!nativeNotificationModules?.messaging || !nativeNotificationModules?.notifee) {
+      console.log("[FCM] Native modules unavailable. Foreground handler not registered.");
+      return;
+    }
+
+    console.log("[FCM] Setting up foreground message handler...");
+
+    const unsubscribe = nativeNotificationModules
+      .messaging()
+      .onMessage(async (remoteMessage) => {
+      console.log(
+        "[FCM] Foreground message received:",
+        JSON.stringify(remoteMessage, null, 2),
+      );
+
+      try {
+        // Store notification for history
+        await storeNotification({
+          title: remoteMessage.notification?.title || "Notification",
+          message: remoteMessage.notification?.body || "",
+          time: new Date().toISOString(),
+          type:
+            remoteMessage.data?.type ||
+            remoteMessage.data?.category ||
+            "system",
+          data: remoteMessage.data,
+          read: false,
+        });
+        console.log("[FCM] Notification stored successfully");
+
+        // Display notification in foreground using notifee
+        const notificationId =
+          await nativeNotificationModules.notifee.displayNotification({
+          title: remoteMessage.notification?.title || "Notification",
+          body: remoteMessage.notification?.body || "",
+          data: remoteMessage.data,
+          android: {
+            channelId: remoteMessage.data?.category || "default",
+            importance: nativeNotificationModules.AndroidImportance?.HIGH,
+            sound: "default",
+            pressAction: {
+              id: "default",
+            },
+          },
+        });
+        console.log("[FCM] Notification displayed with ID:", notificationId);
+      } catch (error) {
+        console.error("[FCM] Error handling notification:", error);
+      }
+    });
+
+    console.log("[FCM] Foreground message handler registered");
+    return () => {
+      console.log("[FCM] Unsubscribing from foreground messages");
+      unsubscribe();
+    };
   }, []);
 
   // Navigation observer
@@ -190,7 +420,7 @@ const RootLayout = () => {
       screenEnterTimeRef.current = Date.now();
 
       // Track home page visit
-      if (currentRouteName === 'home' && !homeLoadedFiredRef.current) {
+      if (currentRouteName === "home" && !homeLoadedFiredRef.current) {
         homeLoadedFiredRef.current = true;
       }
     }
@@ -198,25 +428,56 @@ const RootLayout = () => {
 
   if (hasError) {
     return (
-      <SafeAreaView style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: 'white' }}>
-        <Text style={{ color: '#ef4444' }}>Something went wrong. Please restart the app.</Text>
+      <SafeAreaView
+        style={{
+          flex: 1,
+          justifyContent: "center",
+          alignItems: "center",
+          backgroundColor: "white",
+        }}
+      >
+        <Text style={{ color: "#ef4444" }}>
+          Something went wrong. Please restart the app.
+        </Text>
       </SafeAreaView>
     );
   }
 
   if (!fontsLoaded && !fontError) {
     return (
-      <SafeAreaView style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: 'white' }}>
-        <LinearGradient colors={["rgba(255,215,0,0.1)", "rgba(255,215,0,0.05)"]} style={{ padding: 32, borderRadius: 24, alignItems: 'center' }}>
-          <Animated.View style={{ opacity: fadeAnim, transform: [{ scale: scaleAnim }] }}>
-            <Image source={images.Premium_icon} style={{ width: 112, height: 112, marginBottom: 24 }} resizeMode="contain" />
-            <View style={{ alignItems: 'center', rowGap: 12 }}>
-              <Text style={{ fontSize: 24, fontWeight: 'bold', color: '#1a202c' }}>
-                Track<Text style={{ color: '#FFD700' }}>EatFit</Text>
+      <SafeAreaView
+        style={{
+          flex: 1,
+          justifyContent: "center",
+          alignItems: "center",
+          backgroundColor: "white",
+        }}
+      >
+        <LinearGradient
+          colors={["rgba(255,215,0,0.1)", "rgba(255,215,0,0.05)"]}
+          style={{ padding: 32, borderRadius: 24, alignItems: "center" }}
+        >
+          <Animated.View
+            style={{ opacity: fadeAnim, transform: [{ scale: scaleAnim }] }}
+          >
+            <Image
+              source={images.Premium_icon}
+              style={{ width: 112, height: 112, marginBottom: 24 }}
+              resizeMode="contain"
+            />
+            <View style={{ alignItems: "center", rowGap: 12 }}>
+              <Text
+                style={{ fontSize: 24, fontWeight: "bold", color: "#1a202c" }}
+              >
+                Track<Text style={{ color: "#FFD700" }}>EatFit</Text>
               </Text>
-              <Text style={{ fontSize: 14, color: '#718096', textAlign: 'center' }}>Initializing your wellness journey...</Text>
+              <Text
+                style={{ fontSize: 14, color: "#718096", textAlign: "center" }}
+              >
+                Initializing your wellness journey...
+              </Text>
             </View>
-            <View style={{ marginTop: 32, alignItems: 'center' }}>
+            <View style={{ marginTop: 32, alignItems: "center" }}>
               <ActivityIndicator size="large" color="#FFA000" />
             </View>
           </Animated.View>
@@ -231,11 +492,46 @@ const RootLayout = () => {
         <ThemeProvider>
           <LanguageProvider>
             <GoogleFitProvider>
-              <Stack screenOptions={{ headerShown: false, gestureEnabled: false, animation: 'slide_from_right' }}>
-                <Stack.Screen name="(auth)" options={{ headerShown: false, gestureEnabled: true }} />
-                <Stack.Screen name="(tabs)" options={{ headerShown: false, gestureEnabled: false }} />
-                {["index", "Search", "Nutrition", "Goal", "Micronutrients", "FoodDetails", "RecipeDetails", "RecipeSearch", "Meals_complete", "favorite", "Adddevice", "Posts", "geminichat", "DietPlanner", "GoogleFitApi", "BluetoothHealthTracker", "Community/EditProfile", "EditMealCard"].map(screen => (
-                  <Stack.Screen key={screen} name={screen} options={{ headerShown: false }} />
+              <Stack
+                screenOptions={{
+                  headerShown: false,
+                  gestureEnabled: false,
+                  animation: "slide_from_right",
+                }}
+              >
+                <Stack.Screen
+                  name="(auth)"
+                  options={{ headerShown: false, gestureEnabled: true }}
+                />
+                <Stack.Screen
+                  name="(tabs)"
+                  options={{ headerShown: false, gestureEnabled: false }}
+                />
+                {[
+                  "index",
+                  "Search",
+                  "Nutrition",
+                  "Goal",
+                  "Micronutrients",
+                  "FoodDetails",
+                  "RecipeDetails",
+                  "RecipeSearch",
+                  "Meals_complete",
+                  "favorite",
+                  "Adddevice",
+                  "Posts",
+                  "geminichat",
+                  "DietPlanner",
+                  "GoogleFitApi",
+                  "BluetoothHealthTracker",
+                  "Community/EditProfile",
+                  "EditMealCard",
+                ].map((screen) => (
+                  <Stack.Screen
+                    key={screen}
+                    name={screen}
+                    options={{ headerShown: false }}
+                  />
                 ))}
               </Stack>
             </GoogleFitProvider>
@@ -248,4 +544,3 @@ const RootLayout = () => {
 
 export { linking };
 export default RootLayout;
-

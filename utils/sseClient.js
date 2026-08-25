@@ -219,7 +219,7 @@ export default function createSSE(url, handlers = {}, options = {}) {
         return;
       }
       // Always use the production WebSocket URL
-      let wsUrl = 'wss://v1.trackeatfit.xyz/ws/events';
+      let wsUrl = 'wss://trackeatfit.onrender.com/ws/events';
       ws = new WebSocket(wsUrl);
       ws.onopen = (e) => {
         reconnectAttempts = 0;

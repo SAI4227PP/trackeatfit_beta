@@ -8,9 +8,7 @@
 
 import { useEffect, useRef } from 'react';
 import NetInfo from '@react-native-community/netinfo';
-// Modular Firebase imports
-import { getApp } from '@react-native-firebase/app';
-import { getAnalytics, logEvent as modularLogEvent, setUserId as modularSetUserId, setUserProperties as modularSetUserProperties } from '@react-native-firebase/analytics';
+import { NativeModules } from 'react-native';
 
 // List of recommended event names for validation (add more as needed)
 const RECOMMENDED_EVENTS = [
@@ -84,8 +82,45 @@ function validateParams(params) {
 
 // Helper to get analytics instance (modular API)
 function getAnalyticsInstance() {
-  const app = getApp();
-  return getAnalytics(app);
+  const firebase = getFirebaseModules();
+  if (!firebase) {
+    return null;
+  }
+
+  const app = firebase.getApp();
+  return firebase.getAnalytics(app);
+}
+
+let cachedFirebaseModules = undefined;
+
+function getFirebaseModules() {
+  if (cachedFirebaseModules !== undefined) {
+    return cachedFirebaseModules;
+  }
+
+  // Expo Go does not include RN Firebase native modules.
+  if (!NativeModules?.RNFBAppModule) {
+    cachedFirebaseModules = null;
+    return cachedFirebaseModules;
+  }
+
+  try {
+    const { getApp } = require('@react-native-firebase/app');
+    const analyticsModule = require('@react-native-firebase/analytics');
+
+    cachedFirebaseModules = {
+      getApp,
+      getAnalytics: analyticsModule.getAnalytics,
+      logEvent: analyticsModule.logEvent,
+      setUserId: analyticsModule.setUserId,
+      setUserProperties: analyticsModule.setUserProperties,
+    };
+  } catch (error) {
+    logError('getFirebaseModules', error);
+    cachedFirebaseModules = null;
+  }
+
+  return cachedFirebaseModules;
 }
 
 // Analytics Service Singleton
@@ -128,8 +163,12 @@ class AnalyticsService {
       return;
     }
     try {
+      const analyticsInstance = getAnalyticsInstance();
+      const firebase = getFirebaseModules();
+      if (!analyticsInstance || !firebase) return;
+
       // Use modular API
-      await modularLogEvent(getAnalyticsInstance(), eventName, mergedParams);
+      await firebase.logEvent(analyticsInstance, eventName, mergedParams);
       // if (this.debug) console.log('[Analytics] Sent event:', eventName, mergedParams);
     } catch (error) {
       logError('logEvent', error);
@@ -140,8 +179,12 @@ class AnalyticsService {
     while (this.eventQueue.length > 0) {
       const { eventName, params } = this.eventQueue.shift();
       try {
+        const analyticsInstance = getAnalyticsInstance();
+        const firebase = getFirebaseModules();
+        if (!analyticsInstance || !firebase) return;
+
         // Use modular API
-        await modularLogEvent(getAnalyticsInstance(), eventName, params);
+        await firebase.logEvent(analyticsInstance, eventName, params);
         // if (this.debug) console.log('[Analytics] Flushed event:', eventName, params);
       } catch (error) {
         logError('flushEventQueue', error);
@@ -151,8 +194,12 @@ class AnalyticsService {
 
   async setUserId(userId) {
     try {
+      const analyticsInstance = getAnalyticsInstance();
+      const firebase = getFirebaseModules();
+      if (!analyticsInstance || !firebase) return;
+
       // Use modular API
-      await modularSetUserId(getAnalyticsInstance(), userId);
+      await firebase.setUserId(analyticsInstance, userId);
       this.globalUserContext.userId = userId;
     } catch (error) {
       logError('setUserId', error);
@@ -165,8 +212,12 @@ class AnalyticsService {
       return;
     }
     try {
+      const analyticsInstance = getAnalyticsInstance();
+      const firebase = getFirebaseModules();
+      if (!analyticsInstance || !firebase) return;
+
       // Use modular API
-      await modularSetUserProperties(getAnalyticsInstance(), properties);
+      await firebase.setUserProperties(analyticsInstance, properties);
       this.globalUserContext = { ...this.globalUserContext, ...properties };
     } catch (error) {
       logError('setUserProperties', error);

@@ -499,7 +499,10 @@ cron.schedule('0 12 * * *', async () => {
 const startServer = async () => {
     try {
         await initializeDatabases();
-        await connectRedis();
+        const redisConnected = await connectRedis();
+        if (!redisConnected) {
+            console.warn('Redis unavailable at startup. Server will continue without Redis-backed cache.');
+        }
         server.listen(PORT, () => {
             console.log(`Server is running on port ${PORT}`);
         });

@@ -1,26 +1,68 @@
 {
   "project_info": {
-    "project_number": "568128790697",
-    "project_id": "simple-3120f",
-    "storage_bucket": "simple-3120f.firebasestorage.app"
+    "project_number": "1074372441109",
+    "project_id": "trackeatfit-3bacc",
+    "storage_bucket": "trackeatfit-3bacc.firebasestorage.app"
   },
   "client": [
     {
       "client_info": {
-        "mobilesdk_app_id": "1:568128790697:android:44458e42cec77b5186c9b8",
+        "mobilesdk_app_id": "1:1074372441109:android:ab024d279bfcf6b2474a1c",
         "android_client_info": {
-          "package_name": "com.hip6379.simple"
+          "package_name": "com.inc.TrackEatFit"
         }
       },
-      "oauth_client": [],
+      "oauth_client": [
+        {
+          "client_id": "1074372441109-0tek29mjvhg5jq1pffogrl2ji2gr390p.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.inc.TrackEatFit",
+            "certificate_hash": "a9c0e4cb7d60aeff10389a7fb6a46d22fcb225de"
+          }
+        },
+        {
+          "client_id": "1074372441109-nhsktrpq8msqv7omtntu9vsgqhgf45e6.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.inc.TrackEatFit",
+            "certificate_hash": "7a50db8c229c13fa44dc3020c747aa31366cb009"
+          }
+        },
+        {
+          "client_id": "1074372441109-rdqivcaeijfsgbn18prfv06cra5iueuf.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.inc.TrackEatFit",
+            "certificate_hash": "6a733852511986a09f94278f2eda04f580714416"
+          }
+        },
+        {
+          "client_id": "1074372441109-vr6fdu3h8kp551lgq5gted80gb479n5c.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.inc.TrackEatFit",
+            "certificate_hash": "b590ed6eeefc18af195075edc3b462199cff849a"
+          }
+        },
+        {
+          "client_id": "1074372441109-hvl9jv3v4kggko3q54rirt8vviri12g1.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
       "api_key": [
         {
-          "current_key": "AIzaSyAB3hSLY2TTVi8vry9WfOmSy2yKcgkuW9U"
+          "current_key": "AIzaSyAfKWID7km52F8GRhNdeGpNPXYtuHhjY6A"
         }
       ],
       "services": {
         "appinvite_service": {
-          "other_platform_oauth_client": []
+          "other_platform_oauth_client": [
+            {
+              "client_id": "1074372441109-2umh9ce8gn855biuheju5r5fkdl85j2d.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
         }
       }
     }

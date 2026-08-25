@@ -81,9 +81,17 @@ const ImageViewerModal = ({ visible, imageUrl, onClose, images, initialIndex = 0
       animationType="fade"
     >
       <GestureHandlerRootView style={{ flex: 1 }}>
-        <View className={`flex-1 ${isDarkMode ? 'bg-gray-900' : 'bg-white'}`}>
-          <View className="absolute top-12 w-full flex-row justify-between px-4 z-10">
-            <Text className={`${isDarkMode ? 'text-white' : 'text-black'}`}>
+        <View style={{ flex: 1, backgroundColor: isDarkMode ? '#111827' : '#fff' }}>
+          <View style={{
+            position: 'absolute',
+            top: 48,
+            width: '100%',
+            flexDirection: 'row',
+            justifyContent: 'space-between',
+            paddingHorizontal: 16,
+            zIndex: 10
+          }}>
+            <Text style={{ color: isDarkMode ? '#fff' : '#000' }}>
               {`${currentIndex + 1}/${images.length}`}
             </Text>
             <TouchableOpacity onPress={onClose}>
@@ -98,7 +106,7 @@ const ImageViewerModal = ({ visible, imageUrl, onClose, images, initialIndex = 0
             onGestureEvent={onPanEvent}
             onHandlerStateChange={onPanHandlerStateChange}
           >
-            <Animated.View className="flex-1 justify-center">
+            <Animated.View style={{ flex: 1, justifyContent: 'center' }}>
               <PinchGestureHandler
                 onGestureEvent={onPinchEvent}
               >
@@ -113,15 +121,26 @@ const ImageViewerModal = ({ visible, imageUrl, onClose, images, initialIndex = 0
             </Animated.View>
           </PanGestureHandler>
           {/* Navigation dots */}
-          <View className="absolute bottom-10 w-full flex-row justify-center items-center">
+          <View style={{
+            position: 'absolute',
+            bottom: 40,
+            width: '100%',
+            flexDirection: 'row',
+            justifyContent: 'center',
+            alignItems: 'center'
+          }}>
             {images.map((_, index) => (
               <View
                 key={index}
-                className={`w-2 h-2 rounded-full mx-1 ${
-                  index === currentIndex 
-                    ? isDarkMode ? 'bg-white' : 'bg-black' 
-                    : 'bg-gray-500'
-                }`}
+                style={{
+                  width: 8,
+                  height: 8,
+                  borderRadius: 9999,
+                  marginHorizontal: 4,
+                  backgroundColor: index === currentIndex
+                    ? (isDarkMode ? '#fff' : '#000')
+                    : '#6b7280'
+                }}
               />
             ))}
           </View>
@@ -266,8 +285,7 @@ const Thread = memo(({ content, timestamp, profilename, uniqueName, profilepic, 
       <ScrollView
         horizontal
         showsHorizontalScrollIndicator={false}
-        className="mt-0"
-        contentContainerStyle={{ gap: 16, paddingLeft: 0 }}
+        contentContainerStyle={{ gap: 16, paddingLeft: 0, marginTop: 0 }}
       >
         {images.slice(0, 6).map((imageUrl, index) => (
           <TouchableOpacity
@@ -277,11 +295,18 @@ const Thread = memo(({ content, timestamp, profilename, uniqueName, profilepic, 
               maxWidth: imageWidth,
               borderRadius: 15,
               overflow: 'hidden',
-              marginLeft: index === 0 ? 0 : 0,
+              marginLeft: 0,
             }}
           >
             <View>
-              <View className="absolute w-full h-full bg-gray-200 items-center justify-center">
+              <View style={{
+                position: 'absolute',
+                width: '100%',
+                height: '100%',
+                backgroundColor: '#e5e7eb',
+                alignItems: 'center',
+                justifyContent: 'center'
+              }}>
                 <ActivityIndicator size="small" color="#0000ff" />
               </View>
               <Image
@@ -401,10 +426,25 @@ const Thread = memo(({ content, timestamp, profilename, uniqueName, profilepic, 
   const isContentLong = content && (content.length > 180 || (content.match(/\n/g) || []).length >= 4);
 
   return (
-    <View className={`p-4 border-b ${isDarkMode ? 'border-gray-700 bg-gray-900' : 'border-gray-200 bg-white'}`}>
-      <View className="flex-row items-start">
+    <View style={{
+      padding: 16,
+      borderBottomWidth: 1,
+      borderBottomColor: isDarkMode ? '#374151' : '#e5e7eb',
+      backgroundColor: isDarkMode ? '#111827' : '#fff'
+    }}>
+      <View style={{ flexDirection: 'row', alignItems: 'flex-start' }}>
         <TouchableOpacity
-          className="w-10 h-10 border border-cugreen rounded-full justify-center items-center overflow-hidden mr-3"
+          style={{
+            width: 40,
+            height: 40,
+            borderWidth: 1,
+            borderColor: '#16a34a',
+            borderRadius: 9999,
+            justifyContent: 'center',
+            alignItems: 'center',
+            overflow: 'hidden',
+            marginRight: 12
+          }}
           onPress={() => navigation.navigate('posts/UserProfile/[uniqueName]', { uniqueName })}
         >
           <Image
@@ -413,19 +453,24 @@ const Thread = memo(({ content, timestamp, profilename, uniqueName, profilepic, 
             contentFit="cover"
           />
         </TouchableOpacity>
-        <View className="flex-1">
-          <View className="flex-row justify-between items-center">
-            <View className="flex-row items-center ">
-              <Text className={`font-bold ${isDarkMode ? 'text-white' : 'text-black'}`}>{profilename}</Text>
-              <Text className="text-gray-500 ml-1">{uniqueName ? `@${uniqueName}` : `@${profilename?.toLowerCase?.()}`}</Text>
-              <Text className="text-gray-500 ml-1">· {timeSince(new Date(timestamp))} ago</Text>
+        <View style={{ flex: 1 }}>
+          <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
+            <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+              <Text style={{ fontWeight: 'bold', color: isDarkMode ? '#fff' : '#000' }}>{profilename}</Text>
+              <Text style={{ color: '#6b7280', marginLeft: 4 }}>{uniqueName ? `@${uniqueName}` : `@${profilename?.toLowerCase?.()}`}</Text>
+              <Text style={{ color: '#6b7280', marginLeft: 4 }}>· {timeSince(new Date(timestamp))} ago</Text>
             </View>
             <TouchableOpacity onPress={toggleModal}>
               <Ionicons name="ellipsis-horizontal" size={24} color={isDarkMode ? "white" : "black"} style={{ marginRight: 10 }}/>
             </TouchableOpacity>
           </View>
-          <TouchableOpacity className="flex-row items-center mr-3" onPress={handleCommentPress}>
-            <Text className={`text-base mt-1 font-normal ${isDarkMode ? 'text-white' : 'text-black'}`}>
+          <TouchableOpacity style={{ flexDirection: 'row', alignItems: 'center', marginRight: 12 }} onPress={handleCommentPress}>
+            <Text style={{
+              fontSize: 16,
+              marginTop: 4,
+              fontWeight: '400',
+              color: isDarkMode ? '#fff' : '#000'
+            }}>
               {
                 isContentLong && !showFullContent
                   ? `${content.slice(0, 180).replace(/\n/g, ' ')}... `
@@ -433,35 +478,43 @@ const Thread = memo(({ content, timestamp, profilename, uniqueName, profilepic, 
               }
               {
                 isContentLong &&
-                <Text className="text-cugreen font-semibold" >show more</Text>
+                <Text style={{ color: '#16a34a', fontWeight: '600' }}>show more</Text>
               }
             </Text>
           </TouchableOpacity>
         </View>
       </View>
-      <View className="ml-8">
+      <View style={{ marginLeft: 32 }}>
         {renderImages()}
       </View>
-      <View className="flex-row ml-6 mt-2">
-        <TouchableOpacity className="flex-row items-center ml-6 mr-3" onPress={handleLike}>
+      <View style={{ flexDirection: 'row', marginLeft: 24, marginTop: 8 }}>
+        <TouchableOpacity style={{ flexDirection: 'row', alignItems: 'center', marginLeft: 24, marginRight: 12 }} onPress={handleLike}>
           <Ionicons name={isLiked ? "heart" : "heart-outline"} size={24} color={isLiked ? "red" : isDarkMode ? "white" : "black"} style={{ marginRight: 5 }}/>
-          <Text className={`text-sm ${isDarkMode ? 'text-white' : 'text-black'}`}>{likesCount}</Text>
+          <Text style={{ fontSize: 14, color: isDarkMode ? '#fff' : '#000' }}>{likesCount}</Text>
         </TouchableOpacity>
-        <TouchableOpacity className="flex-row items-center mr-3" onPress={handleCommentPress}>
+        <TouchableOpacity style={{ flexDirection: 'row', alignItems: 'center', marginRight: 12 }} onPress={handleCommentPress}>
           <Ionicons name="chatbubble-outline" size={24} color={isDarkMode ? "white" : "black"} style={{ marginRight: 5 }}/>
-          <Text className={`text-sm ${isDarkMode ? 'text-white' : 'text-black'}`}>{commentsCount}</Text>
+          <Text style={{ fontSize: 14, color: isDarkMode ? '#fff' : '#000' }}>{commentsCount}</Text>
         </TouchableOpacity>
-        <TouchableOpacity className="flex-row items-center" onPress={handleSave}>
+        <TouchableOpacity style={{ flexDirection: 'row', alignItems: 'center' }} onPress={handleSave}>
           <Ionicons name={isSaved ? "bookmark" : "bookmark-outline"} size={24} color={isDarkMode ? "white" : "black"} style={{ marginRight: 5 }}/>
         </TouchableOpacity>
         {/* Share Option */}
-                  <TouchableOpacity
-                    className="flex-row items-center py-2"
-                    onPress={handleShare}
-                  >
-                    <Text className={`ml-3 flex-1 font-medium text-base mt-0.5 mb-0.5 ${isDarkMode ? 'text-white' : 'text-black'}`}>Share</Text>
-                    <Ionicons name="share-social-outline" size={24} color={isDarkMode ? "white" : "black"} style={{ marginRight: 10 }} />
-                  </TouchableOpacity>
+        <TouchableOpacity
+          style={{ flexDirection: 'row', alignItems: 'center', paddingVertical: 8 }}
+          onPress={handleShare}
+        >
+          <Text style={{
+            marginLeft: 12,
+            flex: 1,
+            fontWeight: '500',
+            fontSize: 16,
+            marginTop: 2,
+            marginBottom: 2,
+            color: isDarkMode ? '#fff' : '#000'
+          }}>Share</Text>
+          <Ionicons name="share-social-outline" size={24} color={isDarkMode ? "white" : "black"} style={{ marginRight: 10 }} />
+        </TouchableOpacity>
       </View>
       {/* Modal for Menu */}
       <Modal
@@ -471,21 +524,54 @@ const Thread = memo(({ content, timestamp, profilename, uniqueName, profilepic, 
         onRequestClose={toggleModal}
       >
         <TouchableWithoutFeedback onPress={toggleModal}>
-          <View className="flex-1 justify-end bg-opacity-100">
+          <View style={{ flex: 1, justifyContent: 'flex-end', backgroundColor: 'rgba(0,0,0,0.1)' }}>
             <TouchableWithoutFeedback onPress={() => {}}>
               <View
-                className={`p-5 rounded-t-2xl ${isDarkMode ? 'bg-gray-900' : 'bg-white'}`}
-                style={{ transform: [{ translateY: dragDistance }] }}
+                style={{
+                  padding: 20,
+                  borderTopLeftRadius: 24,
+                  borderTopRightRadius: 24,
+                  backgroundColor: isDarkMode ? '#111827' : '#fff',
+                  transform: [{ translateY: dragDistance }]
+                }}
                 {...panResponder.panHandlers}
               >
-                {/* ...existing modal content... */}
-                <View className="flex-1 w-20 items-center justify-center bg-gray-950 p-0.5 mb-4 ml-[36%] mt-[-8] border border-gray-950 rounded-xl" />
-                <View className="border border-gray-300 rounded-lg mb-2">
+                <View style={{
+                  width: 80,
+                  alignSelf: 'center',
+                  backgroundColor: '#0a0a0a',
+                  paddingVertical: 2,
+                  marginBottom: 16,
+                  marginTop: -8,
+                  borderRadius: 12,
+                  borderWidth: 1,
+                  borderColor: '#0a0a0a'
+                }} />
+                <View style={{
+                  borderWidth: 1,
+                  borderColor: '#d1d5db',
+                  borderRadius: 12,
+                  marginBottom: 8
+                }}>
                   <TouchableOpacity
-                    className="flex-row items-center py-2 border-b border-gray-300"
+                    style={{
+                      flexDirection: 'row',
+                      alignItems: 'center',
+                      paddingVertical: 8,
+                      borderBottomWidth: 1,
+                      borderBottomColor: '#d1d5db'
+                    }}
                     onPress={handleSave}
                   >
-                    <Text className={`ml-3 flex-1 font-medium text-base mt-0.5 mb-0.5 ${isDarkMode ? 'text-white' : 'text-black'}`}>
+                    <Text style={{
+                      marginLeft: 12,
+                      flex: 1,
+                      fontWeight: '500',
+                      fontSize: 16,
+                      marginTop: 2,
+                      marginBottom: 2,
+                      color: isDarkMode ? '#fff' : '#000'
+                    }}>
                       {isSaved ? 'Unsave' : 'Save'}
                     </Text>
                     <Ionicons
@@ -496,36 +582,67 @@ const Thread = memo(({ content, timestamp, profilename, uniqueName, profilepic, 
                   </TouchableOpacity>
                   {/* Share Option */}
                   <TouchableOpacity
-                    className="flex-row items-center py-2"
+                    style={{
+                      flexDirection: 'row',
+                      alignItems: 'center',
+                      paddingVertical: 8
+                    }}
                     onPress={handleShare}
                   >
-                    <Text className={`ml-3 flex-1 font-medium text-base mt-0.5 mb-0.5 ${isDarkMode ? 'text-white' : 'text-black'}`}>Share</Text>
+                    <Text style={{
+                      marginLeft: 12,
+                      flex: 1,
+                      fontWeight: '500',
+                      fontSize: 16,
+                      marginTop: 2,
+                      marginBottom: 2,
+                      color: isDarkMode ? '#fff' : '#000'
+                    }}>Share</Text>
                     <Ionicons name="share-social-outline" size={24} color={isDarkMode ? "white" : "black"} style={{ marginRight: 10 }} />
                   </TouchableOpacity>
                 </View>
                 {/* Copy Link Option */}
-                <View className="mt-4">
+                <View style={{ marginTop: 16 }}>
                   <TouchableOpacity
-                    className="flex-row items-center py-2 border border-gray-300 rounded-lg mb-2 "
+                    style={{
+                      flexDirection: 'row',
+                      alignItems: 'center',
+                      paddingVertical: 8,
+                      borderWidth: 1,
+                      borderColor: '#d1d5db',
+                      borderRadius: 12,
+                      marginBottom: 8
+                    }}
                     onPress={handleCopyLink}
                   >
-                    <Text className={`ml-3 flex-1 font-medium text-base mt-0.5 mb-0.5 ${isDarkMode ? 'text-white' : 'text-black'}`}>Copy Link</Text>
+                    <Text style={{
+                      marginLeft: 12,
+                      flex: 1,
+                      fontWeight: '500',
+                      fontSize: 16,
+                      marginTop: 2,
+                      marginBottom: 2,
+                      color: isDarkMode ? '#fff' : '#000'
+                    }}>Copy Link</Text>
                     <Ionicons name="link-outline" size={24} color={isDarkMode ? "white" : "black"} style={{ marginRight: 10 }} />
                   </TouchableOpacity>
                 </View>
-                <View className="border border-gray-300 rounded-lg mt-4 mb-3">
-                  {/* <TouchableOpacity
-                    className="flex-row items-center py-2 border-b border-gray-300"
-                    onPress={() => {
-                      toggleModal();
-                    }}
-                  >
-                    <Text className={`ml-3 flex-1 font-medium text-base mt-0.5 mb-0.5 ${isDarkMode ? 'text-white' : 'text-black'}`}>Mute</Text>
-                    <Ionicons name="volume-mute-outline" size={24} color={isDarkMode ? "white" : "black"} style={{ marginRight: 10 }} />
-                  </TouchableOpacity> */}
+                <View style={{
+                  borderWidth: 1,
+                  borderColor: '#d1d5db',
+                  borderRadius: 12,
+                  marginTop: 16,
+                  marginBottom: 12
+                }}>
                   {userId !== postUserId && (
                     <TouchableOpacity
-                      className="flex-row items-center py-2 border-b border-gray-300"
+                      style={{
+                        flexDirection: 'row',
+                        alignItems: 'center',
+                        paddingVertical: 8,
+                        borderBottomWidth: 1,
+                        borderBottomColor: '#d1d5db'
+                      }}
                       onPress={handleFollowAction}
                       disabled={followLoading}
                     >
@@ -533,7 +650,15 @@ const Thread = memo(({ content, timestamp, profilename, uniqueName, profilepic, 
                         <ActivityIndicator size="small" color={isDarkMode ? "white" : "black"} />
                       ) : (
                         <>
-                          <Text className={`ml-3 flex-1 font-medium text-base mt-0.5 mb-0.5 ${isDarkMode ? 'text-white' : 'text-black'}`}>
+                          <Text style={{
+                            marginLeft: 12,
+                            flex: 1,
+                            fontWeight: '500',
+                            fontSize: 16,
+                            marginTop: 2,
+                            marginBottom: 2,
+                            color: isDarkMode ? '#fff' : '#000'
+                          }}>
                             {isFollowing ? `Unfollow @${uniqueName}` : `Follow @${uniqueName}`}
                           </Text>
                           <Ionicons
@@ -547,10 +672,22 @@ const Thread = memo(({ content, timestamp, profilename, uniqueName, profilepic, 
                     </TouchableOpacity>
                   )}
                   <TouchableOpacity
-                    className="flex-row items-center py-2"
+                    style={{
+                      flexDirection: 'row',
+                      alignItems: 'center',
+                      paddingVertical: 8
+                    }}
                     onPress={handleReport}
                   >
-                    <Text className={`ml-3 flex-1 font-medium text-base mt-0.5 mb-0.5 ${isDarkMode ? 'text-white' : 'text-black'}`}>Report</Text>
+                    <Text style={{
+                      marginLeft: 12,
+                      flex: 1,
+                      fontWeight: '500',
+                      fontSize: 16,
+                      marginTop: 2,
+                      marginBottom: 2,
+                      color: isDarkMode ? '#fff' : '#000'
+                    }}>Report</Text>
                     <Ionicons name="flag-outline" size={24} color={isDarkMode ? "white" : "black"} style={{ marginRight: 10 }} />
                   </TouchableOpacity>
                 </View>
@@ -566,18 +703,23 @@ const Thread = memo(({ content, timestamp, profilename, uniqueName, profilepic, 
 const PostSkeleton = () => {
   const { isDarkMode } = useTheme();
   return (
-    <View className={`p-4 border-b ${isDarkMode ? 'border-gray-700 bg-gray-900' : 'border-gray-200 bg-white'}`}>
-      <View className="flex-row items-start">
-        <View className="w-10 h-10 rounded-full bg-gray-200" />
-        <View className="flex-1 ml-3">
-          <View className="w-2/3 h-4 bg-gray-200 rounded mb-2" />
-          <View className="w-1/3 h-3 bg-gray-200 rounded" />
+    <View style={{
+      padding: 16,
+      borderBottomWidth: 1,
+      borderBottomColor: isDarkMode ? '#374151' : '#e5e7eb',
+      backgroundColor: isDarkMode ? '#111827' : '#fff'
+    }}>
+      <View style={{ flexDirection: 'row', alignItems: 'flex-start' }}>
+        <View style={{ width: 40, height: 40, borderRadius: 9999, backgroundColor: '#e5e7eb' }} />
+        <View style={{ flex: 1, marginLeft: 12 }}>
+          <View style={{ width: '66%', height: 16, backgroundColor: '#e5e7eb', borderRadius: 8, marginBottom: 8 }} />
+          <View style={{ width: '33%', height: 12, backgroundColor: '#e5e7eb', borderRadius: 8 }} />
         </View>
       </View>
-      <View className="mt-3 w-full h-40 bg-gray-200 rounded" />
-      <View className="flex-row mt-3">
-        <View className="w-16 h-4 bg-gray-200 rounded mr-4" />
-        <View className="w-16 h-4 bg-gray-200 rounded" />
+      <View style={{ marginTop: 12, width: '100%', height: 160, backgroundColor: '#e5e7eb', borderRadius: 8 }} />
+      <View style={{ flexDirection: 'row', marginTop: 12 }}>
+        <View style={{ width: 64, height: 16, backgroundColor: '#e5e7eb', borderRadius: 8, marginRight: 16 }} />
+        <View style={{ width: 64, height: 16, backgroundColor: '#e5e7eb', borderRadius: 8 }} />
       </View>
     </View>
   );
@@ -637,13 +779,20 @@ const LikedPosts = () => {
   }, []);
 
   return (
-    <SafeAreaView className={`flex-1 ${isDarkMode ? 'bg-gray-900' : 'bg-white'}`} edges={['top']}>
+    <SafeAreaView style={{ flex: 1, backgroundColor: isDarkMode ? '#111827' : '#fff' }} edges={['top']}>
       {/* Header */}
-      <View className={`flex-row justify-between items-center p-4 border-b ${isDarkMode ? 'border-gray-800' : 'border-gray-200'}`}>
+      <View style={{
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        padding: 16,
+        borderBottomWidth: 1,
+        borderBottomColor: isDarkMode ? '#1f2937' : '#e5e7eb'
+      }}>
         <TouchableOpacity onPress={() => navigation.goBack()}>
           <Icon name="arrow-back" size={24} color={isDarkMode ? 'white' : 'black'} />
         </TouchableOpacity>
-        <Text className={`text-xl font-bold ${isDarkMode ? 'text-white' : 'text-black'}`}>Liked Posts</Text>
+        <Text style={{ fontSize: 20, fontWeight: 'bold', color: isDarkMode ? '#fff' : '#000' }}>Liked Posts</Text>
         <View style={{ width: 24 }} />
       </View>
 
@@ -685,19 +834,33 @@ const LikedPosts = () => {
         />
       ) : (
         !error && (
-          <View className="flex-1 justify-center items-center p-4">
+          <View style={{
+            flex: 1,
+            justifyContent: 'center',
+            alignItems: 'center',
+            padding: 16
+          }}>
             <Icon name="heart-outline" size={64} color={isDarkMode ? 'gray' : '#aaa'} />
-            <Text className={`mt-4 text-xl font-semibold ${isDarkMode ? 'text-white' : 'text-black'}`}>
+            <Text style={{
+              marginTop: 16,
+              fontSize: 20,
+              fontWeight: '600',
+              color: isDarkMode ? '#fff' : '#000'
+            }}>
               No liked posts yet
             </Text>
-          <Text className={`mt-2 text-center ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>
-            Posts you like will appear here. Tap the heart icon on any post to like it.
-          </Text>
-        </View>
-      ))}
+            <Text style={{
+              marginTop: 8,
+              textAlign: 'center',
+              color: isDarkMode ? '#9ca3af' : '#4b5563'
+            }}>
+              Posts you like will appear here. Tap the heart icon on any post to like it.
+            </Text>
+          </View>
+        )
+      )}
     </SafeAreaView>
   );
 };
-
 
 export default LikedPosts;

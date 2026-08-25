@@ -1,18 +1,20 @@
-const express = require('express');
+const express = require("express");
 const router = express.Router();
-const SleepData = require('../models/SleepData');
-const NotificationSettings = require('../models/NotificationSettings');
-const NodeCache = require('node-cache');
+const SleepData = require("../models/SleepData");
+const NotificationSettings = require("../models/NotificationSettings");
+const NodeCache = require("node-cache");
 
 // Initialize cache with 5 minutes TTL
 const cache = new NodeCache({ stdTTL: 300 });
 
 // Get sleep data for a user
-router.get('/', async (req, res) => {
+router.get("/", async (req, res) => {
   try {
     const { userId } = req.query;
     if (!userId) {
-      return res.status(400).json({ success: false, message: 'User ID is required' });
+      return res
+        .status(400)
+        .json({ success: false, message: "User ID is required" });
     }
 
     // Check cache first
@@ -29,25 +31,34 @@ router.get('/', async (req, res) => {
     yesterday.setDate(yesterday.getDate() - 1);
 
     // Use lean() for better performance and only select needed fields
-    const [notificationSettings, todayRecord, lastNightRecord] = await Promise.all([
-      NotificationSettings.findOne({ userId }).select('health.sleepSchedule.enabled').lean(),
-      SleepData.findOne({
-        userId,
-        date: { $gte: today }
-      }).select('-__v').lean(),
-      SleepData.findOne({
-        userId,
-        date: { $gte: yesterday, $lt: today }
-      }).select('-__v').sort({ date: -1 }).lean()
-    ]);
+    const [notificationSettings, todayRecord, lastNightRecord] =
+      await Promise.all([
+        NotificationSettings.findOne({ userId })
+          .select("health.sleepSchedule.enabled")
+          .lean(),
+        SleepData.findOne({
+          userId,
+          date: { $gte: today },
+        })
+          .select("-__v")
+          .lean(),
+        SleepData.findOne({
+          userId,
+          date: { $gte: yesterday, $lt: today },
+        })
+          .select("-__v")
+          .sort({ date: -1 })
+          .lean(),
+      ]);
 
-    const sleepNotificationsEnabled = notificationSettings?.health?.sleepSchedule?.enabled ?? true;
+    const sleepNotificationsEnabled =
+      notificationSettings?.health?.sleepSchedule?.enabled ?? true;
 
     const response = {
       success: true,
-      data: [todayRecord || await createDefaultRecord(userId, sleepNotificationsEnabled)],
+      data: todayRecord ? [todayRecord] : [],
       lastNightSleep: lastNightRecord || null,
-      notificationsEnabled: sleepNotificationsEnabled
+      notificationsEnabled: sleepNotificationsEnabled,
     };
 
     // Cache the response
@@ -55,38 +66,32 @@ router.get('/', async (req, res) => {
 
     res.json(response);
   } catch (error) {
-    console.error('Error fetching sleep data:', error);
+    console.error("Error fetching sleep data:", error);
     res.status(500).json({ success: false, message: error.message });
   }
 });
 
-// Helper function to create default record
-async function createDefaultRecord(userId, notificationsEnabled) {
-  const defaultRecord = {
-    userId,
-    bedTime: new Date().setHours(22, 0, 0, 0),
-    wakeTime: new Date().setHours(6, 0, 0, 0),
-    quality: 'good',
-    duration: 480,
-    date: new Date(),
-    settings: {
-      notifications: notificationsEnabled,
-      smartAlarm: true,
-      sleepGoal: 8,
-      trackMovement: true
-    }
-  };
+// Helper function to invalidate all sleep-related caches for a user
+function invalidateSleepCache(userId) {
+  const today = new Date().toISOString().split("T")[0];
+  const yesterday = new Date(Date.now() - 24 * 60 * 60 * 1000)
+    .toISOString()
+    .split("T")[0];
 
-  return await SleepData.create(defaultRecord);
+  cache.del(`sleep_${userId}`);
+  cache.del(`sleep_${userId}_${today}`);
+  cache.del(`sleep_${userId}_${yesterday}`);
 }
 
 // Add/Update sleep record
-router.post('/', async (req, res) => {
+router.post("/", async (req, res) => {
   try {
     const { userId, bedTime, wakeTime, quality, notes, settings } = req.body;
 
     if (!userId || !bedTime || !wakeTime || !quality) {
-      return res.status(400).json({ success: false, message: 'Missing required fields' });
+      return res
+        .status(400)
+        .json({ success: false, message: "Missing required fields" });
     }
 
     // Get today's date range
@@ -107,8 +112,8 @@ router.post('/', async (req, res) => {
         userId,
         date: {
           $gte: today,
-          $lt: tomorrow
-        }
+          $lt: tomorrow,
+        },
       },
       {
         bedTime,
@@ -117,101 +122,129 @@ router.post('/', async (req, res) => {
         notes,
         duration,
         settings,
-        date: new Date()
+        date: new Date(),
       },
       {
         new: true,
-        upsert: true
-      }
+        upsert: true,
+      },
     );
 
     // Invalidate cache
-    cache.del(`sleep_${userId}`);
+    invalidateSleepCache(userId);
 
     res.json({
       success: true,
-      data: sleepData
+      data: sleepData,
     });
   } catch (error) {
-    console.error('Error saving sleep data:', error);
+    console.error("Error saving sleep data:", error);
     res.status(500).json({ success: false, message: error.message });
   }
 });
 
 // Update sleep notifications in both Sleep and Notification settings
-router.put('/notifications', async (req, res) => {
+router.put("/notifications", async (req, res) => {
   try {
     const { userId, enabled } = req.body;
     if (!userId) {
-      return res.status(400).json({ 
-        success: false, 
-        message: 'User ID is required' 
+      return res.status(400).json({
+        success: false,
+        message: "User ID is required",
       });
     }
+
+    // Get today's date range
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const tomorrow = new Date(today);
+    tomorrow.setDate(tomorrow.getDate() + 1);
 
     // Update notification settings
     await NotificationSettings.findOneAndUpdate(
       { userId },
-      { 
-        $set: { 'health.sleepSchedule.enabled': enabled }
+      {
+        $set: { "health.sleepSchedule.enabled": enabled },
       },
-      { new: true }
+      { new: true },
     );
 
-    // Update sleep settings
+    // Update today's sleep record settings specifically
     const sleepData = await SleepData.findOneAndUpdate(
-      { userId },
-      { 
-        $set: { 'settings.notifications': enabled }
+      {
+        userId,
+        date: {
+          $gte: today,
+          $lt: tomorrow,
+        },
       },
-      { new: true }
+      {
+        $set: { "settings.notifications": enabled },
+      },
+      { new: true },
     );
 
     // Invalidate cache
-    cache.del(`sleep_${userId}`);
+    invalidateSleepCache(userId);
 
     res.json({
       success: true,
-      message: 'Sleep notifications updated successfully',
+      message: "Sleep notifications updated successfully",
       data: {
         sleepData,
-        notificationsEnabled: enabled
-      }
+        notificationsEnabled: enabled,
+      },
     });
   } catch (error) {
-    console.error('Error updating sleep notifications:', error);
+    console.error("Error updating sleep notifications:", error);
     res.status(500).json({
       success: false,
-      message: 'Failed to update sleep notifications',
-      error: error.message
+      message: "Failed to update sleep notifications",
+      error: error.message,
     });
   }
 });
 
 // Update sleep settings
-router.put('/settings', async (req, res) => {
+router.put("/settings", async (req, res) => {
   try {
     const { userId, settings } = req.body;
     if (!userId || !settings) {
-      return res.status(400).json({ 
-        success: false, 
-        message: 'User ID and settings are required' 
+      return res.status(400).json({
+        success: false,
+        message: "User ID and settings are required",
       });
     }
 
+    // Get today's date range
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const tomorrow = new Date(today);
+    tomorrow.setDate(tomorrow.getDate() + 1);
+
+    // Update today's sleep record settings specifically
     const updatedData = await SleepData.findOneAndUpdate(
-      { userId },
+      {
+        userId,
+        date: {
+          $gte: today,
+          $lt: tomorrow,
+        },
+      },
       { settings },
-      { new: true }
+      { new: true },
     );
+
+    // Invalidate cache
+    invalidateSleepCache(userId);
 
     res.json({ success: true, data: updatedData });
   } catch (error) {
-    console.error('Error updating sleep settings:', error);
-    res.status(500).json({ 
-      success: false, 
-      message: 'Failed to update sleep settings',
-      error: error.message 
+    console.error("Error updating sleep settings:", error);
+    res.status(500).json({
+      success: false,
+      message: "Failed to update sleep settings",
+      error: error.message,
     });
   }
 });
